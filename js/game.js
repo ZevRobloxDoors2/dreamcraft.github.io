@@ -5,39 +5,37 @@ import { Player } from './player.js';
 
 export class Game {
     constructor() {
-        this.gameState = 'menu'; // Starts in the menu
+        this.gameState = 'menu';
         this.clock = new THREE.Clock();
         this.raycaster = new THREE.Raycaster();
         this.centerCoords = new THREE.Vector2(0, 0); 
+        this.inventory = []; // Player's collected items
     }
 
     init() {
         this.scene = new THREE.Scene();
-        // Sunset Background Color (Orange/Pinkish)
         this.scene.background = new THREE.Color(0xFF7E47); 
-        this.scene.fog = new THREE.FogExp2(0xFF7E47, 0.02); // Sunset fog
+        this.scene.fog = new THREE.FogExp2(0xFF7E47, 0.015); 
 
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
         this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gameCanvas') });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-        // Sunset Lighting
-        const ambientLight = new THREE.AmbientLight(0xffbfa5, 0.6); // Warm ambient
+        const ambientLight = new THREE.AmbientLight(0xffbfa5, 0.6);
         this.scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xff8c00, 1.0); // Orange sun
+        const directionalLight = new THREE.DirectionalLight(0xff8c00, 1.0);
         directionalLight.position.set(20, 10, -20);
         this.scene.add(directionalLight);
 
         this.controls = new PointerLockControls(this.camera, document.body);
         
-        // Generate the world immediately so it shows up on the menu
         this.world = new World(this.scene);
         this.world.generate();
 
-        this.player = new Player(this.controls, this.camera);
+        // Pass the world to the player for collision detection!
+        this.player = new Player(this.controls, this.camera, this.world);
 
-        // Break/Place block logic
+        // Click to Break / Place
         document.addEventListener('mousedown', (event) => {
             if (this.gameState !== 'playing') return;
 
@@ -46,34 +44,24 @@ export class Game {
 
             if (intersects.length > 0) {
                 const intersect = intersects[0];
-                if (event.button === 0) { // Left Click Break
-                    this.scene.remove(intersect.object);
-                    this.world.blocks = this.world.blocks.filter(b => b !== intersect.object);
-                } else if (event.button === 2) { // Right Click Place
+                if (event.button === 0) { 
+                    // Trigger the new break block effect!
+                    this.world.breakBlock(intersect.object);
+                } else if (event.button === 2) { 
                     const pos = intersect.object.position.clone().add(intersect.face.normal);
                     this.world.placeBlock(pos.x, pos.y, pos.z, 'dirt');
                 }
             }
         });
 
-        window.addEventListener('resize', () => {
-            this.camera.aspect = window.innerWidth / window.innerHeight;
-            this.camera.updateProjectionMatrix();
-            this.renderer.setSize(window.innerWidth, window.innerHeight);
-        });
-
-        // Start animating immediately for the background
         this.clock.start();
         this.animate(); 
     }
 
     startGame() {
         this.gameState = 'playing';
-        // Reset camera to player height and unlock from spinning
         this.camera.position.set(0, 10, 0); 
-        this.controls.lock(); // Lock mouse
-        
-        // Change back to daytime lighting (optional, remove if you want permanent sunset)
+        this.controls.lock(); 
         this.scene.background = new THREE.Color(0x87CEEB);
         this.scene.fog = new THREE.FogExp2(0x87CEEB, 0.02);
     }
@@ -85,18 +73,49 @@ export class Game {
     animate() {
         requestAnimationFrame(() => this.animate());
         const delta = this.clock.getDelta();
+        const time = Date.now() * 0.002;
 
         if (this.gameState === 'menu') {
-            // Spin the camera in a circle over the world
-            const time = Date.now() * 0.0002;
-            this.camera.position.x = Math.sin(time) * 30;
-            this.camera.position.z = Math.cos(time) * 30;
-            this.camera.position.y = 15; // Height of the camera
-            this.camera.lookAt(0, 5, 0); // Look at the center of the world
+            this.camera.position.x = Math.sin(time * 0.1) * 30;
+            this.camera.position.z = Math.cos(time * 0.1) * 30;
+            this.camera.position.y = 15; 
+            this.camera.lookAt(0, 5, 0); 
         } 
         else if (this.gameState === 'playing') {
-            // Player movement
             this.player.update(delta);
+
+            // --- 1. Animate Breaking Particles ---
+            for (let i = this.world.particles.length - 1; i >= 0; i--) {
+                const p = this.world.particles[i];
+                p.userData.velocity.y -= 15.0 * delta; // Gravity on particles
+                p.position.addScaledVector(p.userData.velocity, delta);
+                p.scale.subScalar(delta * 0.5); // Shrink over time
+
+                if (p.scale.x <= 0) {
+                    this.scene.remove(p);
+                    this.world.particles.splice(i, 1);
+                }
+            }
+
+            // --- 2. Animate and Collect Dropped Items ---
+            for (let i = this.world.droppedItems.length - 1; i >= 0; i--) {
+                const item = this.world.droppedItems[i];
+                
+                // Spin 360 and Bob up and down
+                item.rotation.y += delta * 2;
+                item.position.y = item.userData.startY + Math.sin(time * 2) * 0.2;
+
+                // Check distance to player for collection
+                const dist = this.camera.position.distanceTo(item.position);
+                if (dist < 2.0) {
+                    // Collect it!
+                    this.inventory.push(item.userData.type);
+                    console.log("Collected: " + item.userData.type); // Check your browser console!
+                    
+                    this.scene.remove(item);
+                    this.world.droppedItems.splice(i, 1);
+                }
+            }
         }
         
         this.renderer.render(this.scene, this.camera);

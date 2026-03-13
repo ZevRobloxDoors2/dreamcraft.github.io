@@ -8,15 +8,13 @@ export class Player {
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         
-        // Movement settings
         this.speed = 10.0;
         this.jumpForce = 8.0;
         this.gravity = 20.0;
-        
         this.canJump = false;
 
-        // Start player slightly above the ground
-        this.camera.position.set(0, 2, 0);
+        // Player height set to 1.62 (Standard Minecraft eye level)
+        this.camera.position.set(0, 1.62, 0);
 
         this.setupInputs();
     }
@@ -51,30 +49,26 @@ export class Player {
     }
 
     update(delta) {
-        // Apply Gravity
         this.velocity.y -= this.gravity * delta;
-
-        // Handle WASD friction/velocity
         this.velocity.x -= this.velocity.x * 10.0 * delta;
         this.velocity.z -= this.velocity.z * 10.0 * delta;
 
         this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
         this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
-        this.direction.normalize(); // Ensure consistent speed in all directions
+        this.direction.normalize(); 
 
         if (this.moveForward || this.moveBackward) this.velocity.z -= this.direction.z * this.speed * delta;
         if (this.moveLeft || this.moveRight) this.velocity.x -= this.direction.x * this.speed * delta;
 
-        // Apply movement to the controls/camera
         this.controls.moveRight(-this.velocity.x * delta);
         this.controls.moveForward(-this.velocity.z * delta);
         
         this.camera.position.y += (this.velocity.y * delta);
 
-        // Simple Ground Collision (The ground is at Y = 0, camera is at Y = 2)
-        if (this.camera.position.y < 2) {
+        // Update ground collision to match new height of 1.62
+        if (this.camera.position.y < 1.62) {
             this.velocity.y = 0;
-            this.camera.position.y = 2;
+            this.camera.position.y = 1.62;
             this.canJump = true;
         }
     }

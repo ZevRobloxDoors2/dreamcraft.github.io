@@ -43,6 +43,27 @@ export class World {
 
     // --- NEW: Break Effects & Drops ---
     breakBlock(blockMesh) {
+        // ... (Keep your existing particle logic here) ...
+
+        // GRASS TO DIRT LOGIC
+        let droppedType = blockMesh.userData.type;
+        if (droppedType === 'grass') {
+            droppedType = 'dirt'; // Grass blocks drop dirt items
+        }
+
+        const item = new THREE.Mesh(
+            new THREE.BoxGeometry(0.25, 0.25, 0.25),
+            // Re-use the dirt material for the drop if it was grass
+            droppedType === 'dirt' ? this.dirtMat : blockMesh.material 
+        );
+        item.position.copy(blockMesh.position);
+        item.userData = { type: droppedType, startY: blockMesh.position.y };
+        this.scene.add(item);
+        this.droppedItems.push(item);
+
+        this.scene.remove(blockMesh);
+        this.blocks = this.blocks.filter(b => b !== blockMesh);
+    }
         // 1. Create Particles (Cookie breaking effect)
         for (let i = 0; i < 8; i++) {
             const particle = new THREE.Mesh(

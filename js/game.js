@@ -5,53 +5,53 @@ import { Player } from './player.js';
 
 export class Game {
     constructor() {
-        this.isRunning = false;
+        this.gameState = 'menu'; // Starts in the menu
         this.clock = new THREE.Clock();
         this.raycaster = new THREE.Raycaster();
-        this.centerCoords = new THREE.Vector2(0, 0); // Center of screen
+        this.centerCoords = new THREE.Vector2(0, 0); 
     }
 
     init() {
         this.scene = new THREE.Scene();
-        this.scene.background = new THREE.Color(0x87CEEB);
+        // Sunset Background Color (Orange/Pinkish)
+        this.scene.background = new THREE.Color(0xFF7E47); 
+        this.scene.fog = new THREE.FogExp2(0xFF7E47, 0.02); // Sunset fog
+
         this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
         this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gameCanvas') });
         this.renderer.setSize(window.innerWidth, window.innerHeight);
 
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+        // Sunset Lighting
+        const ambientLight = new THREE.AmbientLight(0xffbfa5, 0.6); // Warm ambient
         this.scene.add(ambientLight);
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.6);
-        directionalLight.position.set(20, 40, 20);
+        const directionalLight = new THREE.DirectionalLight(0xff8c00, 1.0); // Orange sun
+        directionalLight.position.set(20, 10, -20);
         this.scene.add(directionalLight);
 
         this.controls = new PointerLockControls(this.camera, document.body);
+        
+        // Generate the world immediately so it shows up on the menu
         this.world = new World(this.scene);
         this.world.generate();
 
         this.player = new Player(this.controls, this.camera);
 
-        // Click to Break / Place Blocks
+        // Break/Place block logic
         document.addEventListener('mousedown', (event) => {
-            if (!this.isRunning) return;
+            if (this.gameState !== 'playing') return;
 
             this.raycaster.setFromCamera(this.centerCoords, this.camera);
-            // Only interact with blocks (which we put in world.blocks array)
             const intersects = this.raycaster.intersectObjects(this.world.blocks);
 
             if (intersects.length > 0) {
                 const intersect = intersects[0];
-                
-                // Left Click (0) to Break
-                if (event.button === 0) {
+                if (event.button === 0) { // Left Click Break
                     this.scene.remove(intersect.object);
-                    // Remove from our array so we can't click it anymore
                     this.world.blocks = this.world.blocks.filter(b => b !== intersect.object);
-                } 
-                // Right Click (2) to Place
-                else if (event.button === 2) {
-                    const placePosition = intersect.object.position.clone().add(intersect.face.normal);
-                    this.world.placeBlock(placePosition.x, placePosition.y, placePosition.z, 'dirt');
+                } else if (event.button === 2) { // Right Click Place
+                    const pos = intersect.object.position.clone().add(intersect.face.normal);
+                    this.world.placeBlock(pos.x, pos.y, pos.z, 'dirt');
                 }
             }
         });
@@ -61,22 +61,44 @@ export class Game {
             this.camera.updateProjectionMatrix();
             this.renderer.setSize(window.innerWidth, window.innerHeight);
         });
-    }
 
-    start() {
-        this.controls.lock();
-        this.isRunning = true;
+        // Start animating immediately for the background
         this.clock.start();
-        this.animate();
+        this.animate(); 
     }
 
-    pause() { this.isRunning = false; }
+    startGame() {
+        this.gameState = 'playing';
+        // Reset camera to player height and unlock from spinning
+        this.camera.position.set(0, 10, 0); 
+        this.controls.lock(); // Lock mouse
+        
+        // Change back to daytime lighting (optional, remove if you want permanent sunset)
+        this.scene.background = new THREE.Color(0x87CEEB);
+        this.scene.fog = new THREE.FogExp2(0x87CEEB, 0.02);
+    }
+
+    pauseGame() {
+        this.gameState = 'paused';
+    }
 
     animate() {
-        if (!this.isRunning) return;
         requestAnimationFrame(() => this.animate());
         const delta = this.clock.getDelta();
-        this.player.update(delta);
+
+        if (this.gameState === 'menu') {
+            // Spin the camera in a circle over the world
+            const time = Date.now() * 0.0002;
+            this.camera.position.x = Math.sin(time) * 30;
+            this.camera.position.z = Math.cos(time) * 30;
+            this.camera.position.y = 15; // Height of the camera
+            this.camera.lookAt(0, 5, 0); // Look at the center of the world
+        } 
+        else if (this.gameState === 'playing') {
+            // Player movement
+            this.player.update(delta);
+        }
+        
         this.renderer.render(this.scene, this.camera);
     }
 }

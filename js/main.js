@@ -1,45 +1,74 @@
 import { Game } from './game.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const menuContainer = document.getElementById('menuContainer');
-    const mainScreen = document.getElementById('mainScreen');
+    // UI Elements
+    const uiContainer = document.getElementById('uiContainer');
+    const mainMenu = document.getElementById('mainMenu');
     const worldScreen = document.getElementById('worldScreen');
+    const inventoryUI = document.getElementById('inventoryUI');
+    const hotbar = document.getElementById('hotbar');
+    const crosshair = document.getElementById('crosshair');
     
+    // Buttons
     const playMenuButton = document.getElementById('playMenuButton');
     const createWorldButton = document.getElementById('createWorldButton');
     const backButton = document.getElementById('backButton');
     
+    // Initialize the engine (World generates, menu starts spinning)
     const game = new Game();
     game.init();
 
-    // 1. Click Play -> Go to World Selection
+    // 1. Click "Play" on main menu
     playMenuButton.addEventListener('click', () => {
-        mainScreen.style.display = 'none';
-        worldScreen.style.display = 'block';
+        mainMenu.style.display = 'none';
+        worldScreen.style.display = 'flex';
     });
 
-    // 2. Click Cancel -> Go back to Main Menu
+    // 2. Click "Cancel" on world select
     backButton.addEventListener('click', () => {
         worldScreen.style.display = 'none';
-        mainScreen.style.display = 'block';
+        mainMenu.style.display = 'flex';
     });
 
-    // 3. Click Play World -> Start the game!
+    // 3. Click "Play Selected World"
     createWorldButton.addEventListener('click', () => {
-        game.start();
-        menuContainer.style.display = 'none';
-        
-        // Reset the menu back to the main screen for when you pause
+        game.startGame();
+        uiContainer.style.display = 'none';
         worldScreen.style.display = 'none';
-        mainScreen.style.display = 'block';
-        playMenuButton.innerText = "Resume Game"; 
+        hotbar.style.display = 'flex';
+        crosshair.style.display = 'block';
     });
 
-    // Handle pressing ESC to pause
+    // Press E to toggle inventory
+    document.addEventListener('keydown', (e) => {
+        if (e.code === 'KeyE' && game.gameState === 'playing') {
+            document.exitPointerLock(); 
+            uiContainer.style.display = 'flex';
+            inventoryUI.style.display = 'flex';
+        }
+    });
+
+    // Handle pausing when hitting ESC
     document.addEventListener('pointerlockchange', () => {
         if (document.pointerLockElement !== document.body) {
-            game.pause();
-            menuContainer.style.display = 'flex';
+            // Mouse unlocked
+            if (game.gameState === 'playing') {
+                game.pauseGame();
+                uiContainer.style.display = 'flex';
+                // Only show main menu if we didn't open inventory
+                if(inventoryUI.style.display !== 'flex') {
+                    mainMenu.style.display = 'flex';
+                    playMenuButton.innerText = "Resume Game"; 
+                }
+                crosshair.style.display = 'none';
+            }
+        } else {
+            // Mouse locked (unpausing)
+            game.gameState = 'playing';
+            uiContainer.style.display = 'none';
+            inventoryUI.style.display = 'none';
+            hotbar.style.display = 'flex';
+            crosshair.style.display = 'block';
         }
     });
 });

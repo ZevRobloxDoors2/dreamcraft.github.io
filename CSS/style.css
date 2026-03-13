@@ -1,43 +1,88 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
 html, body {
     margin: 0;
-    overflow: hidden; /* Hide scrollbars if canvas is full screen */
-    background-color: #000; /* Black background until game loads */
+    padding: 0;
+    overflow: hidden;
+    background-color: #87CEEB; /* Sky blue background */
+    font-family: 'VT323', monospace; /* Blocky retro font */
 }
 
 #gameCanvas {
-    display: block; /* Remove extra space below canvas */
+    display: block;
     width: 100vw;
     height: 100vh;
-    cursor: none; /* Hide default cursor, game will handle it */
 }
 
-#debugInfo {
+#crosshair {
     position: absolute;
-    top: 10px;
-    left: 10px;
-    color: white;
-    font-family: monospace;
-    font-size: 14px;
-    background: rgba(0, 0, 0, 0.5);
-    padding: 5px;
-    border-radius: 3px;
-    z-index: 100;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 30px;
+    pointer-events: none;
+    z-index: 10;
 }
 
+/* --- Bedrock Style Menu --- */
 #menuContainer {
     position: absolute;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: rgba(0, 0, 0, 0.8);
+    background-color: rgba(0, 0, 0, 0.6);
+    background-image: url('../textures/dirt.png'); /* Falls back to dark if dirt isn't loaded */
+    background-size: 64px;
+    background-blend-mode: multiply;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 200;
+}
+
+.menu-content {
+    background-color: #c6c6c6;
+    padding: 40px;
+    border: 4px solid #555;
+    border-radius: 2px;
+    box-shadow: inset -4px -4px 0px rgba(0,0,0,0.2), inset 4px 4px 0px rgba(255,255,255,0.5);
+    text-align: center;
+    width: 400px;
+}
+
+.game-title {
+    font-size: 60px;
+    color: #333;
+    margin-top: 0;
+    margin-bottom: 30px;
+    text-shadow: 2px 2px 0px #fff;
+}
+
+.mc-button {
+    display: block;
+    width: 100%;
+    background-color: #d0d0d0;
+    color: #111;
+    font-family: 'VT323', monospace;
+    font-size: 28px;
+    padding: 10px 20px;
+    margin-bottom: 15px;
+    border: 2px solid #000;
+    box-shadow: inset -3px -3px 0px #888, inset 3px 3px 0px #fff;
+    cursor: pointer;
+    transition: background-color 0.1s;
+}
+
+.mc-button:hover {
+    background-color: #63924f; /* Green highlight like Bedrock */
     color: white;
-    font-family: sans-serif;
-    font-size: 2em;
-    /* Initially hidden, shown by JS */
-    display: none; 
+    box-shadow: inset -3px -3px 0px #3c5d2d, inset 3px 3px 0px #85b96e;
+}
+
+.menu-hint {
+    font-size: 20px;
+    color: #444;
+    margin-top: 20px;
 }

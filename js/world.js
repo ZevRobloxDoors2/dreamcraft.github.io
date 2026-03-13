@@ -4,73 +4,45 @@ export class World {
     constructor(scene) {
         this.scene = scene;
         this.blocks = []; 
-        this.droppedItems = []; // Array for floating blocks
-        this.particles = []; // Array for breaking effects
+        this.droppedItems = []; 
+        this.particles = []; 
         
-        const textureLoader = new THREE.TextureLoader();
-        const loadTex = (path) => {
-            const tex = textureLoader.load(path);
-            tex.magFilter = THREE.NearestFilter; 
-            tex.minFilter = THREE.NearestFilter;
-            return tex;
-        }
-
-        const grassTop = loadTex('textures/grass.png');
-        const grassSide = loadTex('textures/grass_side.png');
-        const dirt = loadTex('textures/dirt.png');
-
-        this.grassMat = [
-            new THREE.MeshLambertMaterial({ map: grassSide }), new THREE.MeshLambertMaterial({ map: grassSide }),
-            new THREE.MeshLambertMaterial({ map: grassTop }), new THREE.MeshLambertMaterial({ map: dirt }),
-            new THREE.MeshLambertMaterial({ map: grassSide }), new THREE.MeshLambertMaterial({ map: grassSide })
-        ];
-        this.dirtMat = new THREE.MeshLambertMaterial({ map: dirt });
+        // Basic Materials (You can replace colors with texture loaders later)
+        this.materials = {
+            grass: new THREE.MeshLambertMaterial({ color: 0x41980a }),
+            dirt: new THREE.MeshLambertMaterial({ color: 0x5c4033 }),
+            stone: new THREE.MeshLambertMaterial({ color: 0x7d7d7d }),
+            coal_ore: new THREE.MeshLambertMaterial({ color: 0x222222 }),
+            iron_ore: new THREE.MeshLambertMaterial({ color: 0xd8af93 })
+        };
 
         this.blockGeometry = new THREE.BoxGeometry(1, 1, 1);
-        
-        // Render distance settings (14 default, up to 35)
-        this.renderDistance = 14; 
     }
 
     placeBlock(x, y, z, type) {
-        let material = type === 'grass' ? this.grassMat : this.dirtMat;
+        const material = this.materials[type] || this.materials.dirt;
         const block = new THREE.Mesh(this.blockGeometry, material);
         block.position.set(x, y, z);
-        block.userData = { type: type }; // Remember what block this is
+        block.userData = { type: type }; 
         this.scene.add(block);
         this.blocks.push(block); 
     }
 
-    // --- NEW: Break Effects & Drops ---
     breakBlock(blockMesh) {
-        // 1. Create Particles (Cookie breaking effect)
+        // Particles
         for (let i = 0; i < 8; i++) {
-            const particle = new THREE.Mesh(
-                new THREE.BoxGeometry(0.2, 0.2, 0.2),
-                blockMesh.material
-            );
+            const particle = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.2, 0.2), blockMesh.material);
             particle.position.copy(blockMesh.position);
-            // Random explosion direction
-            particle.userData.velocity = new THREE.Vector3(
-                (Math.random() - 0.5) * 5,
-                Math.random() * 5,
-                (Math.random() - 0.5) * 5
-            );
+            particle.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * 5, Math.random() * 5, (Math.random() - 0.5) * 5);
             this.scene.add(particle);
             this.particles.push(particle);
         }
 
-        // GRASS TO DIRT LOGIC
+        // Drops (Grass turns to dirt)
         let droppedType = blockMesh.userData.type;
-        if (droppedType === 'grass') {
-            droppedType = 'dirt'; // Grass blocks drop dirt items
-        }
+        if (droppedType === 'grass') droppedType = 'dirt';
 
-        const item = new THREE.Mesh(
-            new THREE.BoxGeometry(0.25, 0.25, 0.25),
-            // Re-use the dirt material for the drop if it was grass
-            droppedType === 'dirt' ? this.dirtMat : blockMesh.material 
-        );
+        const item = new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 0.25), this.materials[droppedType]);
         item.position.copy(blockMesh.position);
         item.userData = { type: droppedType, startY: blockMesh.position.y };
         this.scene.add(item);
@@ -80,30 +52,33 @@ export class World {
         this.blocks = this.blocks.filter(b => b !== blockMesh);
     }
 
-        // 2. Spawn Floating Dropped Item
-        const item = new THREE.Mesh(
-            new THREE.BoxGeometry(0.25, 0.25, 0.25),
-            blockMesh.material
-        );
-        item.position.copy(blockMesh.position);
-        item.userData = { type: blockMesh.userData.type, startY: blockMesh.position.y };
-        this.scene.add(item);
-        this.droppedItems.push(item);
-
-        // 3. Remove original block
-        this.scene.remove(blockMesh);
-        this.blocks = this.blocks.filter(b => b !== blockMesh);
-    }
-
     generate() {
-        // Expanded to 64 so the menu background void is hidden!
         const chunkSize = 64; 
         
         for (let x = -chunkSize/2; x < chunkSize/2; x++) {
             for (let z = -chunkSize/2; z < chunkSize/2; z++) {
-                const yOffset = Math.floor(Math.sin(x / 4) * 2 + Math.cos(z / 4) * 2);
-                this.placeBlock(x, yOffset, z, 'grass');
-                this.placeBlock(x, yOffset - 1, z, 'dirt');
+                // Surface height variance
+                const surfaceY = Math.floor(Math.sin(x / 4) * 2 + Math.cos(z / 4) * 2);
+                
+                // Top layer
+                this.placeBlock(x, surfaceY, z, 'grass');
+                
+                // Dig down 10 layers for caves/ores
+                for (let depth = 1; depth <= 10; depth++) {
+                    let currentY = surfaceY - depth;
+                    
+                    if (depth <= 2) {
+                        this.placeBlock(x, currentY, z, 'dirt');
+                    } else {
+                        // Stone layer with random ores
+                        let blockType = 'stone';
+                        let rand = Math.random();
+                        if (rand > 0.95) blockType = 'coal_ore';
+                        else if (rand > 0.90) blockType = 'iron_ore';
+                        
+                        this.placeBlock(x, currentY, z, blockType);
+                    }
+                }
             }
         }
     }

@@ -2,7 +2,7 @@
 
 html, body {
     margin: 0; padding: 0; overflow: hidden;
-    background-color: #000; /* Fallback */
+    background-color: #000;
     font-family: 'VT323', monospace;
     user-select: none;
 }
@@ -21,58 +21,31 @@ html, body {
 
 #uiContainer {
     position: absolute; top: 0; left: 0;
-    width: 100%; height: 100%;
-    z-index: 200; 
+    width: 100%; height: 100%; z-index: 200; 
 }
 
-/* --- The Button Texture --- */
 .mc-button {
-    /* Using your exact texture path */
     background-image: url('../textures/ui/buttons/widgetmenubutton.png');
-    background-size: 100% 100%;
-    background-color: #c6c6c6; /* Fallback if texture doesn't load */
-    color: white;
-    font-family: 'VT323', monospace;
-    font-size: 24px;
-    padding: 12px 20px;
-    margin: 5px 0;
-    border: none; /* Removing border because the image has it */
-    cursor: pointer;
-    text-shadow: 2px 2px 0px #333;
-    width: 300px;
-    height: 50px;
+    background-size: 100% 100%; background-color: #c6c6c6;
+    color: white; font-family: 'VT323', monospace; font-size: 24px;
+    padding: 12px 20px; margin: 5px 0; border: none;
+    cursor: pointer; text-shadow: 2px 2px 0px #333;
+    width: 300px; height: 50px;
 }
-.mc-button:hover {
-    filter: brightness(1.2); /* Makes the texture lighter on hover */
-}
+.mc-button:hover { filter: brightness(1.2); }
 
-/* --- Main Menu (Title Top Middle) --- */
 #mainMenu {
-    width: 100%; height: 100%;
-    display: flex; flex-direction: column; 
-    align-items: center; /* Centers horizontally */
-    background: rgba(0,0,0,0.1); /* Very slight darkening so text pops */
+    width: 100%; height: 100%; display: flex; flex-direction: column; 
+    align-items: center; background: rgba(0,0,0,0.1); 
 }
 
-.title-container {
-    position: relative;
-    margin-top: 50px; /* Pushes from the top */
-    margin-bottom: 50px;
-}
+.title-container { position: relative; margin-top: 50px; margin-bottom: 50px; }
+.bedrock-title { font-size: 90px; color: white; margin: 0; text-shadow: 4px 4px 0 #333; }
 
-.bedrock-title {
-    font-size: 90px; color: white; margin: 0; 
-    text-shadow: 4px 4px 0 #333;
-}
-
-/* Yellow Splash Text */
 .splash-text {
-    position: absolute;
-    bottom: -10px; right: -40px;
-    color: #FFFF00; font-size: 30px;
-    transform: rotate(-20deg);
-    text-shadow: 2px 2px 0 #3f3f00;
-    animation: pulse 1s infinite alternate;
+    position: absolute; bottom: -10px; right: -40px;
+    color: #FFFF00; font-size: 30px; transform: rotate(-20deg);
+    text-shadow: 2px 2px 0 #3f3f00; animation: pulse 1s infinite alternate;
 }
 
 @keyframes pulse {
@@ -82,7 +55,6 @@ html, body {
 
 .bedrock-button-stack { display: flex; flex-direction: column; align-items: center; }
 
-/* --- Java World Screen --- */
 #worldScreen {
     width: 100%; height: 100%;
     background-image: url('../textures/dirt.png'); 
@@ -99,55 +71,47 @@ html, body {
 .world-item:hover { border-color: white; background: rgba(255,255,255,0.1); }
 .java-button-row { display: flex; gap: 20px; justify-content: center;}
 
-/* --- Inventory & Hotbar --- */
+/* --- Inventory & Crafting UI --- */
 #inventoryUI {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%;
     background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
 }
-.inventory-window { background: #c6c6c6; padding: 20px; border: 2px solid #000; border-radius: 4px; }
+.inventory-window { background: #c6c6c6; padding: 20px; border: 2px solid #000; border-radius: 4px; width: 500px;}
+.inv-top-row { display: flex; justify-content: space-between; margin-bottom: 20px; }
+.player-preview-box { width: 100px; height: 150px; background: #000; border: 2px solid #555; display: flex; align-items: center; justify-content: center; color: white;}
+.crafting-section h3 { margin: 0 0 10px 0; color: #333; }
+.crafting-container { display: flex; align-items: center; gap: 15px; }
+.crafting-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 4px; }
+.crafting-arrow { font-size: 30px; font-weight: bold; color: #333; }
+.result-slot { width: 44px; height: 44px; }
+
 .inventory-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-top: 10px;}
 .inv-slot { 
     width: 40px; height: 40px; background: #8b8b8b; 
     border: 2px solid #373737; border-bottom-color: #fff; border-right-color: #fff;
 }
-#hotbar {
-    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
-    display: flex; gap: 2px; padding: 4px; background: rgba(0,0,0,0.4); border: 2px solid #000; z-index: 100;
-}
-#hotbar .inv-slot { width: 44px; height: 44px; }
-#hotbar .active { border: 3px solid white; } /* Highlights selected slot */
 
-/* --- HUD Formatting --- */
+/* --- HUD --- */
 #hud {
     position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
     display: flex; flex-direction: column; align-items: center; z-index: 100;
 }
-
-#healthBar {
-    display: flex; gap: 2px; margin-bottom: 5px; height: 20px;
-}
-
+#healthBar { display: flex; gap: 2px; margin-bottom: 5px; height: 20px; }
 .heart {
-    width: 18px; height: 18px;
-    background-image: url('../textures/player/heart.png');
-    background-size: cover;
-    image-rendering: pixelated; /* Keeps pixel art sharp */
+    width: 18px; height: 18px; background-image: url('../textures/player/heart.png');
+    background-size: cover; image-rendering: pixelated;
 }
-
-.heart.empty {
-    filter: grayscale(100%) brightness(0.3); /* Dims the heart when damage is taken */
-}
-
-/* Low health panic animation */
+.heart.empty { filter: grayscale(100%) brightness(0.3); }
 @keyframes heartBob {
     0% { transform: translateY(0px); }
     50% { transform: translateY(-4px); }
     100% { transform: translateY(0px); }
 }
-
-.low-health .heart {
-    animation: heartBob 0.5s infinite;
-}
-/* Randomize the bobbing slightly so they don't all move exactly at the same time */
+.low-health .heart { animation: heartBob 0.5s infinite; }
 .low-health .heart:nth-child(even) { animation-delay: 0.1s; }
-.low-health .heart:nth-child(3n) { animation-delay: 0.2s; }
+
+#hotbar {
+    display: flex; gap: 2px; padding: 4px; background: rgba(0,0,0,0.4); border: 2px solid #000;
+}
+#hotbar .inv-slot { width: 44px; height: 44px; }
+#hotbar .active { border: 3px solid white; }

@@ -4,161 +4,889 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Voxel World</title>
-    <link rel="stylesheet" href="css/style.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;600;700&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        :root {
+            --mc-green: #3d8e3d;
+            --mc-dark-green: #2d6a2d;
+            --mc-gray: #c6c6c6;
+            --mc-dark-gray: #8b8b8b;
+            --mc-black: #1a1a1a;
+            --mc-white: #ffffff;
+        }
+        
+        body {
+            font-family: 'Noto Sans', sans-serif;
+            overflow: hidden;
+            background: #000;
+            color: var(--mc-white);
+        }
+        
+        /* Menu Screens */
+        .menu-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            z-index: 1000;
+        }
+        
+        .menu-screen.active {
+            display: flex;
+        }
+        
+        /* Main Menu - Bedrock Style */
+        .main-menu {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .menu-bg-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,255,255,.05) 35px, rgba(255,255,255,.05) 70px),
+                repeating-linear-gradient(-45deg, transparent, transparent 35px, rgba(255,255,255,.05) 35px, rgba(255,255,255,.05) 70px);
+            animation: bgScroll 20s linear infinite;
+        }
+        
+        @keyframes bgScroll {
+            0% { transform: translate(0, 0); }
+            100% { transform: translate(70px, 70px); }
+        }
+        
+        .menu-container {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+        }
+        
+        .logo-container {
+            margin-bottom: 60px;
+            position: relative;
+        }
+        
+        .game-title {
+            font-size: 72px;
+            font-weight: 700;
+            color: #4ecdc4;
+            text-shadow: 
+                0 0 20px rgba(78, 205, 196, 0.5),
+                4px 4px 0px #2d6a2d,
+                8px 8px 0px rgba(0,0,0,0.3);
+            letter-spacing: 4px;
+            animation: titleFloat 3s ease-in-out infinite;
+            line-height: 1;
+        }
+        
+        @keyframes titleFloat {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .splash-text {
+            position: absolute;
+            top: -20px;
+            right: 20%;
+            background: linear-gradient(135deg, #ffd700, #ffed4e);
+            color: #000;
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 700;
+            transform: rotate(-5deg);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            animation: splashPulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes splashPulse {
+            0%, 100% { transform: rotate(-5deg) scale(1); }
+            50% { transform: rotate(-5deg) scale(1.05); }
+        }
+        
+        /* Bedrock Style Buttons */
+        .bedrock-btn {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 18px 24px;
+            margin-bottom: 12px;
+            background: rgba(0, 0, 0, 0.6);
+            border: 3px solid #4a4a4a;
+            border-radius: 8px;
+            color: white;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .bedrock-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(255,255,255,0.1) 0%, transparent 50%);
+            pointer-events: none;
+        }
+        
+        .bedrock-btn:hover {
+            background: rgba(78, 205, 196, 0.2);
+            border-color: #4ecdc4;
+            transform: translateX(8px);
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+        
+        .bedrock-btn:active {
+            transform: translateX(8px) scale(0.98);
+        }
+        
+        .bedrock-btn.primary {
+            background: rgba(78, 205, 196, 0.25);
+            border-color: #4ecdc4;
+        }
+        
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 6px;
+        }
+        
+        .btn-text {
+            flex: 1;
+            text-align: left;
+        }
+        
+        .btn-arrow {
+            font-size: 24px;
+            opacity: 0.6;
+        }
+        
+        /* Sub Menu Screens */
+        .sub-menu {
+            background: #1a1a1a;
+            flex-direction: column;
+        }
+        
+        .menu-header {
+            background: linear-gradient(180deg, #2d2d2d 0%, #1a1a1a 100%);
+            padding: 20px 40px;
+            border-bottom: 4px solid #4ecdc4;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .menu-header h2 {
+            font-size: 28px;
+            color: #4ecdc4;
+            flex: 1;
+        }
+        
+        .back-btn {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid #555;
+            border-radius: 6px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .back-btn:hover {
+            background: rgba(78, 205, 196, 0.2);
+            border-color: #4ecdc4;
+        }
+        
+        /* Tabs - Bedrock Style */
+        .tabs-container {
+            display: flex;
+            background: #252525;
+            padding: 0 40px;
+            gap: 4px;
+        }
+        
+        .tab-btn {
+            padding: 16px 32px;
+            background: transparent;
+            border: none;
+            border-bottom: 4px solid transparent;
+            color: #888;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: -4px;
+        }
+        
+        .tab-btn.active {
+            color: #4ecdc4;
+            border-bottom-color: #4ecdc4;
+            background: rgba(78, 205, 196, 0.1);
+        }
+        
+        .tab-btn:hover:not(.active) {
+            color: #ccc;
+            background: rgba(255,255,255,0.05);
+        }
+        
+        /* Content Area */
+        .menu-content {
+            flex: 1;
+            padding: 30px 40px;
+            overflow-y: auto;
+            background: rgba(0,0,0,0.3);
+        }
+        
+        /* World Cards - Bedrock Style */
+        .worlds-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .world-card {
+            background: linear-gradient(145deg, #2a2a2a 0%, #1f1f1f 100%);
+            border: 3px solid #3a3a3a;
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .world-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4ecdc4, #44a08d);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .world-card:hover {
+            border-color: #4ecdc4;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        
+        .world-card:hover::before {
+            opacity: 1;
+        }
+        
+        .world-icon {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #567d46 0%, #4a6741 100%);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 40px;
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+        }
+        
+        .world-card h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        
+        .world-meta {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            color: #888;
+            font-size: 14px;
+        }
+        
+        .world-meta span {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .mode-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(78, 205, 196, 0.2);
+            color: #4ecdc4;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        /* Create World Button */
+        .create-world-btn {
+            width: 100%;
+            padding: 40px;
+            background: rgba(78, 205, 196, 0.05);
+            border: 3px dashed #4ecdc4;
+            border-radius: 12px;
+            color: #4ecdc4;
+            font-size: 20px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.2s;
+        }
+        
+        .create-world-btn:hover {
+            background: rgba(78, 205, 196, 0.15);
+            transform: scale(1.02);
+        }
+        
+        .create-world-btn .plus-icon {
+            font-size: 48px;
+            line-height: 1;
+        }
+        
+        /* Settings */
+        .settings-list {
+            max-width: 700px;
+        }
+        
+        .setting-item {
+            background: rgba(255,255,255,0.05);
+            border: 2px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .setting-label {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .setting-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .toggle-btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border: 2px solid #555;
+            border-radius: 6px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .toggle-btn.active {
+            background: rgba(78, 205, 196, 0.3);
+            border-color: #4ecdc4;
+        }
+        
+        /* Loading Screen */
+        .loading-screen {
+            background: #0a0a0a;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .loading-content {
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 80px;
+            height: 80px;
+            border: 6px solid #333;
+            border-top-color: #4ecdc4;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 30px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            font-size: 28px;
+            color: #4ecdc4;
+            margin-bottom: 20px;
+        }
+        
+        .loading-bar-container {
+            width: 400px;
+            height: 20px;
+            background: #222;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 2px solid #333;
+        }
+        
+        .loading-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #4ecdc4, #44a08d);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .loading-tip {
+            color: #666;
+            font-style: italic;
+        }
+        
+        /* Pause Menu */
+        .pause-menu {
+            background: rgba(0,0,0,0.85);
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pause-content {
+            background: linear-gradient(145deg, #2a2a2a 0%, #1f1f1f 100%);
+            border: 4px solid #4a4a4a;
+            border-radius: 16px;
+            padding: 40px;
+            min-width: 400px;
+            text-align: center;
+        }
+        
+        .pause-content h2 {
+            font-size: 32px;
+            color: #4ecdc4;
+            margin-bottom: 30px;
+        }
+        
+        /* Game Canvas */
+        #gameCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        
+        #gameCanvas.active {
+            display: block;
+        }
+        
+        /* HUD */
+        .hud {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: none;
+        }
+        
+        .hud.active {
+            display: block;
+        }
+        
+        .crosshair {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 24px;
+            height: 24px;
+        }
+        
+        .crosshair::before,
+        .crosshair::after {
+            content: '';
+            position: absolute;
+            background: rgba(255, 255, 255, 0.9);
+            box-shadow: 0 0 4px rgba(0,0,0,0.8);
+        }
+        
+        .crosshair::before {
+            width: 2px;
+            height: 24px;
+            left: 11px;
+            top: 0;
+        }
+        
+        .crosshair::after {
+            width: 24px;
+            height: 2px;
+            left: 0;
+            top: 11px;
+        }
+        
+        .hotbar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 4px;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 6px;
+            border-radius: 8px;
+            border: 2px solid rgba(255,255,255,0.2);
+        }
+        
+        .hotbar-slot {
+            width: 52px;
+            height: 52px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 3px solid transparent;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: all 0.1s;
+        }
+        
+        .hotbar-slot.active {
+            border-color: #fff;
+            background: rgba(255, 255, 255, 0.25);
+            transform: scale(1.1);
+            box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        }
+        
+        .slot-number {
+            position: absolute;
+            top: 2px;
+            left: 4px;
+            font-size: 12px;
+            color: #ddd;
+            font-weight: bold;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+        }
+        
+        .block-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 4px;
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.3);
+        }
+        
+        .debug-info {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 12px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            color: #0f0;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            border: 1px solid rgba(0,255,0,0.3);
+        }
+        
+        /* Footer */
+        .menu-footer {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255,255,255,0.4);
+            font-size: 12px;
+        }
+        
+        .version {
+            margin-bottom: 4px;
+        }
+        
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 12px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: rgba(0,0,0,0.3);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #444;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: content-box;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4ecdc4;
+        }
+        
+        /* Create World Form */
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #aaa;
+        }
+        
+        .text-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(0,0,0,0.5);
+            border: 2px solid #444;
+            border-radius: 8px;
+            color: white;
+            font-size: 18px;
+            transition: border-color 0.2s;
+        }
+        
+        .text-input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+        }
+        
+        .create-action-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(180deg, #4ecdc4 0%, #3ba89e 100%);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 20px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .create-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.3);
+        }
+    </style>
 </head>
 <body>
-    <!-- Main Menu (Bedrock Style) -->
-    <div id="mainMenu" class="menu-screen active">
-        <div class="menu-background">
-            <div class="panorama"></div>
-            <div class="menu-content">
+    <!-- Main Menu -->
+    <div id="mainMenu" class="menu-screen main-menu active">
+        <div class="menu-bg-pattern"></div>
+        <div class="menu-container">
+            <div class="logo-container">
+                <div class="splash-text" id="splashText">Creeper? Aw man!</div>
                 <h1 class="game-title">VOXEL WORLD</h1>
-                <div class="splash-text" id="splashText">Welcome!</div>
-                
-                <div class="menu-buttons">
-                    <button class="menu-btn primary" onclick="menu.play()">
-                        <span class="btn-icon">▶</span>
-                        <span class="btn-text">Play</span>
-                    </button>
-                    <button class="menu-btn" onclick="menu.settings()">
-                        <span class="btn-icon">⚙</span>
-                        <span class="btn-text">Settings</span>
-                    </button>
-                    <button class="menu-btn" onclick="menu.marketplace()">
-                        <span class="btn-icon">🏪</span>
-                        <span class="btn-text">Marketplace</span>
-                    </button>
-                    <button class="menu-btn" onclick="menu.quit()">
-                        <span class="btn-icon">✕</span>
-                        <span class="btn-text">Quit</span>
-                    </button>
-                </div>
-                
-                <div class="menu-footer">
-                    <div class="version">v1.0.0</div>
-                    <div class="copyright">© 2024 Voxel World</div>
-                </div>
             </div>
+            
+            <div class="menu-buttons">
+                <button class="bedrock-btn primary" onclick="menu.play()">
+                    <span class="btn-icon">▶</span>
+                    <span class="btn-text">Play</span>
+                    <span class="btn-arrow">›</span>
+                </button>
+                
+                <button class="bedrock-btn" onclick="menu.settings()">
+                    <span class="btn-icon">⚙</span>
+                    <span class="btn-text">Settings</span>
+                    <span class="btn-arrow">›</span>
+                </button>
+                
+                <button class="bedrock-btn" onclick="menu.marketplace()">
+                    <span class="btn-icon">🏪</span>
+                    <span class="btn-text">Marketplace</span>
+                    <span class="btn-arrow">›</span>
+                </button>
+                
+                <button class="bedrock-btn" onclick="menu.quit()">
+                    <span class="btn-icon">✕</span>
+                    <span class="btn-text">Quit</span>
+                    <span class="btn-arrow">›</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="menu-footer">
+            <div class="version">v1.0.0</div>
+            <div>© 2024 Voxel World</div>
         </div>
     </div>
 
     <!-- Play Menu -->
-    <div id="playMenu" class="menu-screen">
+    <div id="playMenu" class="menu-screen sub-menu">
         <div class="menu-header">
-            <h2>Play</h2>
             <button class="back-btn" onclick="menu.back()">← Back</button>
+            <h2>Play</h2>
         </div>
-        <div class="tabs">
-            <button class="tab active" onclick="menu.switchTab('worlds')">Worlds</button>
-            <button class="tab" onclick="menu.switchTab('realms')">Realms</button>
-            <button class="tab" onclick="menu.switchTab('servers')">Servers</button>
+        
+        <div class="tabs-container">
+            <button class="tab-btn active" onclick="menu.switchTab('worlds', this)">Worlds</button>
+            <button class="tab-btn" onclick="menu.switchTab('realms', this)">Realms</button>
+            <button class="tab-btn" onclick="menu.switchTab('servers', this)">Servers</button>
         </div>
-        <div class="tab-content" id="worldsTab">
-            <div class="world-list" id="worldList">
-                <!-- Worlds will be populated here -->
+        
+        <div class="menu-content" id="worldsContent">
+            <div class="worlds-grid" id="worldsGrid">
+                <!-- Worlds injected here -->
             </div>
+            
             <button class="create-world-btn" onclick="menu.createWorld()">
-                <span>+</span>
-                Create New World
+                <span class="plus-icon">+</span>
+                <span>Create New World</span>
             </button>
         </div>
     </div>
 
     <!-- Create World Menu -->
-    <div id="createWorldMenu" class="menu-screen">
+    <div id="createWorldMenu" class="menu-screen sub-menu">
         <div class="menu-header">
-            <h2>Create New World</h2>
             <button class="back-btn" onclick="menu.back()">← Back</button>
+            <h2>Create New World</h2>
         </div>
-        <div class="settings-list">
-            <div class="setting-item">
-                <label>World Name</label>
-                <input type="text" id="worldName" value="New World" maxlength="32">
-            </div>
-            <div class="setting-item">
-                <label>Game Mode</label>
-                <div class="toggle-group">
-                    <button class="toggle-btn active" onclick="menu.setGameMode('survival')">Survival</button>
-                    <button class="toggle-btn" onclick="menu.setGameMode('creative')">Creative</button>
+        
+        <div class="menu-content">
+            <div class="settings-list" style="max-width: 600px;">
+                <div class="form-group">
+                    <label>World Name</label>
+                    <input type="text" class="text-input" id="worldNameInput" value="New World" maxlength="32">
                 </div>
-            </div>
-            <div class="setting-item">
-                <label>Difficulty</label>
-                <div class="toggle-group">
-                    <button class="toggle-btn" onclick="menu.setDifficulty('peaceful')">Peaceful</button>
-                    <button class="toggle-btn active" onclick="menu.setDifficulty('easy')">Easy</button>
-                    <button class="toggle-btn" onclick="menu.setDifficulty('normal')">Normal</button>
-                    <button class="toggle-btn" onclick="menu.setDifficulty('hard')">Hard</button>
+                
+                <div class="setting-item">
+                    <span class="setting-label">Game Mode</span>
+                    <div class="setting-control">
+                        <button class="toggle-btn active" onclick="menu.setGameMode('survival', this)">Survival</button>
+                        <button class="toggle-btn" onclick="menu.setGameMode('creative', this)">Creative</button>
+                    </div>
                 </div>
-            </div>
-            <div class="setting-item">
-                <label>World Type</label>
-                <select id="worldType">
-                    <option value="infinite">Infinite</option>
-                    <option value="flat">Flat</option>
-                    <option value="old">Old</option>
-                </select>
+                
+                <div class="setting-item">
+                    <span class="setting-label">Difficulty</span>
+                    <div class="setting-control">
+                        <button class="toggle-btn" onclick="menu.setDifficulty('peaceful', this)">Peaceful</button>
+                        <button class="toggle-btn active" onclick="menu.setDifficulty('easy', this)">Easy</button>
+                        <button class="toggle-btn" onclick="menu.setDifficulty('normal', this)">Normal</button>
+                        <button class="toggle-btn" onclick="menu.setDifficulty('hard', this)">Hard</button>
+                    </div>
+                </div>
+                
+                <button class="create-action-btn" onclick="menu.startWorld()">Create World</button>
             </div>
         </div>
-        <button class="create-btn" onclick="menu.startWorld()">Create World</button>
     </div>
 
     <!-- Settings Menu -->
-    <div id="settingsMenu" class="menu-screen">
+    <div id="settingsMenu" class="menu-screen sub-menu">
         <div class="menu-header">
-            <h2>Settings</h2>
             <button class="back-btn" onclick="menu.back()">← Back</button>
+            <h2>Settings</h2>
         </div>
-        <div class="settings-categories">
-            <button class="category-btn active" onclick="menu.showSettings('video')">Video</button>
-            <button class="category-btn" onclick="menu.showSettings('audio')">Audio</button>
-            <button class="category-btn" onclick="menu.showSettings('controls')">Controls</button>
-            <button class="category-btn" onclick="menu.showSettings('game')">Game</button>
-        </div>
-        <div class="settings-content" id="videoSettings">
-            <div class="setting-item">
-                <label>Render Distance</label>
-                <input type="range" min="4" max="32" value="12" id="renderDistance">
-                <span class="value">12 chunks</span>
-            </div>
-            <div class="setting-item">
-                <label>Graphics Mode</label>
-                <select id="graphicsMode">
-                    <option value="fancy">Fancy</option>
-                    <option value="fast">Fast</option>
-                </select>
-            </div>
-            <div class="setting-item">
-                <label>FOV</label>
-                <input type="range" min="30" max="110" value="70" id="fov">
-                <span class="value">70°</span>
-            </div>
-            <div class="setting-item">
-                <label>Fullscreen</label>
-                <button class="toggle-switch" onclick="menu.toggleFullscreen()">OFF</button>
+        
+        <div class="menu-content">
+            <div class="settings-list">
+                <div class="setting-item">
+                    <span class="setting-label">Render Distance</span>
+                    <div class="setting-control">
+                        <input type="range" min="4" max="32" value="12" style="width: 150px;">
+                        <span>12 chunks</span>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <span class="setting-label">Graphics Mode</span>
+                    <div class="setting-control">
+                        <button class="toggle-btn active">Fancy</button>
+                        <button class="toggle-btn">Fast</button>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <span class="setting-label">FOV</span>
+                    <div class="setting-control">
+                        <input type="range" min="30" max="110" value="70" style="width: 150px;">
+                        <span>70°</span>
+                    </div>
+                </div>
+                
+                <div class="setting-item">
+                    <span class="setting-label">Fullscreen</span>
+                    <div class="setting-control">
+                        <button class="toggle-btn" onclick="menu.toggleFullscreen()">OFF</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Loading Screen -->
-    <div id="loadingScreen" class="menu-screen">
+    <div id="loadingScreen" class="menu-screen loading-screen">
         <div class="loading-content">
             <div class="loading-spinner"></div>
-            <h2 id="loadingText">Generating World...</h2>
-            <div class="loading-bar">
-                <div class="loading-progress" id="loadingProgress"></div>
+            <div class="loading-text" id="loadingText">Generating World...</div>
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loadingBar"></div>
             </div>
-            <p class="loading-tip" id="loadingTip">Tip: Press E to open inventory!</p>
+            <div class="loading-tip" id="loadingTip">Tip: Don't dig straight down!</div>
         </div>
     </div>
 
     <!-- Pause Menu -->
-    <div id="pauseMenu" class="menu-screen">
+    <div id="pauseMenu" class="menu-screen pause-menu">
         <div class="pause-content">
             <h2>Game Menu</h2>
-            <button class="menu-btn" onclick="menu.resume()">Resume Game</button>
-            <button class="menu-btn" onclick="menu.settings()">Settings</button>
-            <button class="menu-btn" onclick="menu.saveAndQuit()">Save and Quit</button>
+            <button class="bedrock-btn primary" onclick="menu.resume()" style="margin-bottom: 15px;">
+                <span class="btn-text" style="text-align: center;">Resume Game</span>
+            </button>
+            <button class="bedrock-btn" onclick="menu.settings()" style="margin-bottom: 15px;">
+                <span class="btn-text" style="text-align: center;">Settings</span>
+            </button>
+            <button class="bedrock-btn" onclick="menu.saveAndQuit()">
+                <span class="btn-text" style="text-align: center;">Save and Quit</span>
+            </button>
         </div>
     </div>
 
@@ -168,22 +896,554 @@
     <!-- HUD -->
     <div id="hud" class="hud">
         <div class="crosshair"></div>
-        <div class="hotbar" id="hotbar">
-            <!-- Hotbar slots generated by JS -->
-        </div>
-        <div class="debug-info" id="debugInfo">
+        <div class="hotbar" id="hotbar"></div>
+        <div class="debug-info">
             <span id="fps">60 FPS</span>
             <span id="coords">0, 0, 0</span>
             <span id="biome">Plains</span>
         </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="js/menu.js"></script>
-    <script src="js/world.js"></script>
-    <script src="js/player.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/main.js"></script>
+    
+    <script>
+        // Menu System
+        const menu = {
+            currentScreen: 'mainMenu',
+            screenHistory: [],
+            gameMode: 'survival',
+            difficulty: 'easy',
+            worlds: [
+                { name: 'My World', mode: 'Survival', date: 'Today', size: '12 MB', icon: '🏔️' },
+                { name: 'Creative Build', mode: 'Creative', date: 'Yesterday', size: '45 MB', icon: '🏗️' }
+            ],
+            
+            init() {
+                this.renderWorlds();
+                this.setupEventListeners();
+            },
+            
+            renderWorlds() {
+                const grid = document.getElementById('worldsGrid');
+                grid.innerHTML = this.worlds.map((world, i) => `
+                    <div class="world-card" onclick="menu.loadWorld(${i})">
+                        <div class="world-icon">${world.icon}</div>
+                        <h3>${world.name}</h3>
+                        <div class="world-meta">
+                            <span><span class="mode-badge">${world.mode}</span></span>
+                            <span>📅 Last played: ${world.date}</span>
+                            <span>💾 ${world.size}</span>
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.key === 'Escape' && this.currentScreen === 'game') {
+                        this.pause();
+                    }
+                });
+            },
+            
+            showScreen(id) {
+                document.querySelectorAll('.menu-screen').forEach(s => s.classList.remove('active'));
+                document.getElementById(id).classList.add('active');
+                this.screenHistory.push(this.currentScreen);
+                this.currentScreen = id;
+            },
+            
+            back() {
+                if (this.screenHistory.length > 0) {
+                    const prev = this.screenHistory.pop();
+                    document.querySelectorAll('.menu-screen').forEach(s => s.classList.remove('active'));
+                    document.getElementById(prev).classList.add('active');
+                    this.currentScreen = prev;
+                }
+            },
+            
+            play() { this.showScreen('playMenu'); },
+            settings() { this.showScreen('settingsMenu'); },
+            createWorld() { this.showScreen('createWorldMenu'); },
+            
+            marketplace() {
+                alert('Marketplace coming soon!');
+            },
+            
+            quit() {
+                if (confirm('Are you sure you want to quit?')) {
+                    window.close();
+                    document.body.innerHTML = '<h1 style="color:white;text-align:center;margin-top:20%">You can close this tab now.</h1>';
+                }
+            },
+            
+            switchTab(tab, btn) {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            },
+            
+            setGameMode(mode, btn) {
+                this.gameMode = mode;
+                btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            },
+            
+            setDifficulty(diff, btn) {
+                this.difficulty = diff;
+                btn.parentElement.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+            },
+            
+            startWorld() {
+                const name = document.getElementById('worldNameInput').value;
+                this.showScreen('loadingScreen');
+                
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress >= 100) {
+                        progress = 100;
+                        clearInterval(interval);
+                        setTimeout(() => this.enterGame(name), 500);
+                    }
+                    document.getElementById('loadingBar').style.width = progress + '%';
+                }, 200);
+            },
+            
+            loadWorld(index) {
+                this.showScreen('loadingScreen');
+                setTimeout(() => this.enterGame(this.worlds[index].name), 1500);
+            },
+            
+            enterGame(worldName) {
+                document.getElementById('loadingScreen').classList.remove('active');
+                document.getElementById('gameCanvas').classList.add('active');
+                document.getElementById('hud').classList.add('active');
+                this.currentScreen = 'game';
+                
+                if (window.game) game.init(worldName);
+            },
+            
+            pause() {
+                document.getElementById('gameCanvas').classList.remove('active');
+                document.getElementById('hud').classList.remove('active');
+                this.showScreen('pauseMenu');
+                if (window.game) game.pause();
+            },
+            
+            resume() {
+                document.getElementById('pauseMenu').classList.remove('active');
+                document.getElementById('gameCanvas').classList.add('active');
+                document.getElementById('hud').classList.add('active');
+                this.currentScreen = 'game';
+                if (window.game) game.resume();
+            },
+            
+            saveAndQuit() {
+                document.getElementById('pauseMenu').classList.remove('active');
+                document.getElementById('gameCanvas').classList.remove('active');
+                document.getElementById('hud').classList.remove('active');
+                if (window.game) game.save();
+                this.showScreen('mainMenu');
+            },
+            
+            toggleFullscreen() {
+                if (!document.fullscreenElement) {
+                    document.documentElement.requestFullscreen();
+                } else {
+                    document.exitFullscreen();
+                }
+            }
+        };
+
+        // Game System
+        class Game {
+            constructor() {
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.world = null;
+                this.player = null;
+                this.clock = new THREE.Clock();
+                this.running = false;
+                this.paused = false;
+                this.frameCount = 0;
+                this.lastFpsTime = 0;
+            }
+            
+            init(worldName) {
+                // Scene setup
+                this.scene = new THREE.Scene();
+                this.scene.background = new THREE.Color(0x87CEEB);
+                this.scene.fog = new THREE.Fog(0x87CEEB, 10, 100);
+                
+                // Camera
+                this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.1, 1000);
+                
+                // Renderer
+                this.renderer = new THREE.WebGLRenderer({ 
+                    canvas: document.getElementById('gameCanvas'),
+                    antialias: true 
+                });
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+                this.renderer.shadowMap.enabled = true;
+                
+                // Lighting
+                const ambient = new THREE.AmbientLight(0xffffff, 0.6);
+                this.scene.add(ambient);
+                
+                const sun = new THREE.DirectionalLight(0xffffff, 0.8);
+                sun.position.set(50, 100, 50);
+                sun.castShadow = true;
+                this.scene.add(sun);
+                
+                // World
+                this.world = new World();
+                
+                // Player
+                this.player = new Player(this.camera);
+                this.player.position.set(0, 70, 0);
+                
+                // Generate world
+                this.world.update(0, 0);
+                for (const [key, chunk] of this.world.chunks) {
+                    this.scene.add(chunk);
+                }
+                
+                // Setup HUD
+                this.setupHotbar();
+                
+                // Start
+                this.running = true;
+                this.animate();
+                
+                // Pointer lock
+                setTimeout(() => {
+                    document.getElementById('gameCanvas').requestPointerLock();
+                }, 100);
+                
+                window.addEventListener('resize', () => this.onResize());
+            }
+            
+            setupHotbar() {
+                const hotbar = document.getElementById('hotbar');
+                const blocks = [
+                    { name: 'grass', color: '#567d46' },
+                    { name: 'dirt', color: '#8b4513' },
+                    { name: 'stone', color: '#808080' },
+                    { name: 'wood', color: '#8b4513' },
+                    { name: 'leaves', color: '#228b22' },
+                    { name: 'sand', color: '#f4a460' },
+                    { name: 'water', color: '#4682b4' },
+                    { name: 'bedrock', color: '#2f2f2f' },
+                    { name: 'diamond', color: '#00ced1' }
+                ];
+                
+                hotbar.innerHTML = blocks.map((block, i) => `
+                    <div class="hotbar-slot ${i === 0 ? 'active' : ''}" data-index="${i}">
+                        <span class="slot-number">${i + 1}</span>
+                        <div class="block-icon" style="background: ${block.color};"></div>
+                    </div>
+                `).join('');
+                
+                this.player.hotbar = blocks.map(b => b.name);
+            }
+            
+            animate() {
+                if (!this.running) return;
+                requestAnimationFrame(() => this.animate());
+                if (this.paused) return;
+                
+                const delta = this.clock.getDelta();
+                
+                this.player.update(this.world);
+                this.world.update(this.player.position.x, this.player.position.z);
+                
+                // Add new chunks
+                for (const [key, chunk] of this.world.chunks) {
+                    if (!chunk.parent) this.scene.add(chunk);
+                }
+                
+                this.renderer.render(this.scene, this.camera);
+                
+                // FPS
+                this.frameCount++;
+                const now = performance.now();
+                if (now - this.lastFpsTime >= 1000) {
+                    document.getElementById('fps').textContent = `${this.frameCount} FPS`;
+                    this.frameCount = 0;
+                    this.lastFpsTime = now;
+                }
+                
+                // Coords
+                const p = this.player.position;
+                document.getElementById('coords').textContent = 
+                    `${Math.floor(p.x)}, ${Math.floor(p.y)}, ${Math.floor(p.z)}`;
+            }
+            
+            onResize() {
+                this.camera.aspect = window.innerWidth / window.innerHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(window.innerWidth, window.innerHeight);
+            }
+            
+            pause() { this.paused = true; }
+            resume() { this.paused = false; }
+            save() { console.log('World saved'); }
+        }
+
+        // World Generation
+        class World {
+            constructor() {
+                this.chunkSize = 16;
+                this.chunks = new Map();
+                this.blocks = new Map();
+                this.geometry = new THREE.BoxGeometry(1, 1, 1);
+                
+                // Simple colored materials (textures would be loaded here)
+                this.materials = {
+                    grass: new THREE.MeshLambertMaterial({ color: 0x567d46 }),
+                    dirt: new THREE.MeshLambertMaterial({ color: 0x8b4513 }),
+                    stone: new THREE.MeshLambertMaterial({ color: 0x808080 }),
+                    wood: new THREE.MeshLambertMaterial({ color: 0x8b4513 }),
+                    leaves: new THREE.MeshLambertMaterial({ color: 0x228b22, transparent: true, opacity: 0.9 }),
+                    sand: new THREE.MeshLambertMaterial({ color: 0xf4a460 }),
+                    water: new THREE.MeshLambertMaterial({ color: 0x4682b4, transparent: true, opacity: 0.7 }),
+                    bedrock: new THREE.MeshLambertMaterial({ color: 0x2f2f2f }),
+                    diamond: new THREE.MeshLambertMaterial({ color: 0x00ced1 })
+                };
+            }
+            
+            generateChunk(cx, cz) {
+                const key = `${cx},${cz}`;
+                if (this.chunks.has(key)) return;
+                
+                const chunk = new THREE.Group();
+                
+                for (let x = 0; x < this.chunkSize; x++) {
+                    for (let z = 0; z < this.chunkSize; z++) {
+                        const wx = cx * this.chunkSize + x;
+                        const wz = cz * this.chunkSize + z;
+                        const height = this.getHeight(wx, wz);
+                        
+                        for (let y = 0; y <= height; y++) {
+                            let type = 'stone';
+                            if (y === height) type = height > 62 ? 'grass' : 'sand';
+                            else if (y > height - 3) type = height > 62 ? 'dirt' : 'sand';
+                            else if (y < 5) type = 'bedrock';
+                            
+                            this.addBlock(wx, y, wz, type, chunk);
+                        }
+                        
+                        if (height < 62) {
+                            for (let y = height + 1; y <= 62; y++) {
+                                this.addBlock(wx, y, wz, 'water', chunk);
+                            }
+                        }
+                        
+                        if (Math.random() < 0.02 && height > 62) {
+                            this.makeTree(wx, height + 1, wz, chunk);
+                        }
+                    }
+                }
+                
+                this.chunks.set(key, chunk);
+                return chunk;
+            }
+            
+            getHeight(x, z) {
+                let h = 64;
+                h += Math.sin(x * 0.05) * 10;
+                h += Math.sin(z * 0.05) * 10;
+                h += Math.sin(x * 0.1 + z * 0.1) * 5;
+                return Math.floor(Math.max(5, Math.min(100, h)));
+            }
+            
+            addBlock(x, y, z, type, chunk) {
+                const mesh = new THREE.Mesh(this.geometry, this.materials[type]);
+                mesh.position.set(x, y, z);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                mesh.userData = { type, x, y, z };
+                chunk.add(mesh);
+                this.blocks.set(`${x},${y},${z}`, { type, mesh });
+            }
+            
+            makeTree(x, y, z, chunk) {
+                const h = 4 + Math.floor(Math.random() * 2);
+                for (let i = 0; i < h; i++) this.addBlock(x, y + i, z, 'wood', chunk);
+                
+                for (let dx = -2; dx <= 2; dx++) {
+                    for (let dz = -2; dz <= 2; dz++) {
+                        for (let dy = h - 2; dy <= h + 1; dy++) {
+                            if (Math.abs(dx) + Math.abs(dz) + Math.abs(dy - h) < 4 && (dx !== 0 || dz !== 0 || dy < h)) {
+                                this.addBlock(x + dx, y + dy, z + dz, 'leaves', chunk);
+                            }
+                        }
+                    }
+                }
+            }
+            
+            getBlock(x, y, z) {
+                return this.blocks.get(`${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`);
+            }
+            
+            setBlock(x, y, z, type) {
+                const key = `${Math.floor(x)},${Math.floor(y)},${Math.floor(z)}`;
+                const existing = this.blocks.get(key);
+                if (existing) {
+                    existing.mesh.parent.remove(existing.mesh);
+                    this.blocks.delete(key);
+                }
+                if (type) {
+                    const cx = Math.floor(x / this.chunkSize);
+                    const cz = Math.floor(z / this.chunkSize);
+                    const chunk = this.chunks.get(`${cx},${cz}`);
+                    if (chunk) this.addBlock(Math.floor(x), Math.floor(y), Math.floor(z), type, chunk);
+                }
+            }
+            
+            update(px, pz) {
+                const pcx = Math.floor(px / this.chunkSize);
+                const pcz = Math.floor(pz / this.chunkSize);
+                
+                for (let dx = -8; dx <= 8; dx++) {
+                    for (let dz = -8; dz <= 8; dz++) {
+                        this.generateChunk(pcx + dx, pcz + dz);
+                    }
+                }
+            }
+        }
+
+        // Player Controller
+        class Player {
+            constructor(camera) {
+                this.camera = camera;
+                this.position = new THREE.Vector3(0, 70, 0);
+                this.velocity = new THREE.Vector3(0, 0, 0);
+                this.rotation = new THREE.Euler(0, 0, 0, 'YXZ');
+                this.height = 1.8;
+                this.speed = 0.1;
+                this.sprintSpeed = 0.2;
+                this.onGround = false;
+                this.keys = {};
+                this.selectedSlot = 0;
+                this.hotbar = [];
+                
+                this.setupControls();
+            }
+            
+            setupControls() {
+                document.addEventListener('keydown', (e) => {
+                    this.keys[e.code] = true;
+                    if (e.code === 'Space' && this.onGround) {
+                        this.velocity.y = 0.3;
+                        this.onGround = false;
+                    }
+                    if (e.code.startsWith('Digit')) {
+                        const num = parseInt(e.code[5]) - 1;
+                        if (num >= 0 && num < 9) {
+                            this.selectedSlot = num;
+                            document.querySelectorAll('.hotbar-slot').forEach((s, i) => {
+                                s.classList.toggle('active', i === num);
+                            });
+                        }
+                    }
+                });
+                
+                document.addEventListener('keyup', (e) => this.keys[e.code] = false);
+                
+                document.addEventListener('mousemove', (e) => {
+                    if (document.pointerLockElement !== document.getElementById('gameCanvas')) return;
+                    this.rotation.y -= e.movementX * 0.002;
+                    this.rotation.x -= e.movementY * 0.002;
+                    this.rotation.x = Math.max(-Math.PI/2, Math.min(Math.PI/2, this.rotation.x));
+                    this.camera.rotation.copy(this.rotation);
+                });
+                
+                document.addEventListener('mousedown', (e) => {
+                    if (e.button === 0) this.breakBlock();
+                    else if (e.button === 2) this.placeBlock();
+                });
+            }
+            
+            update(world) {
+                const speed = this.keys['ShiftLeft'] ? this.sprintSpeed : this.speed;
+                const forward = new THREE.Vector3(0, 0, -1).applyEuler(this.rotation);
+                const right = new THREE.Vector3(1, 0, 0).applyEuler(this.rotation);
+                forward.y = 0; right.y = 0;
+                forward.normalize(); right.normalize();
+                
+                let mx = 0, mz = 0;
+                if (this.keys['KeyW']) { mx += forward.x * speed; mz += forward.z * speed; }
+                if (this.keys['KeyS']) { mx -= forward.x * speed; mz -= forward.z * speed; }
+                if (this.keys['KeyA']) { mx -= right.x * speed; mz -= right.z * speed; }
+                if (this.keys['KeyD']) { mx += right.x * speed; mz += right.z * speed; }
+                
+                this.velocity.y -= 0.02; // gravity
+                
+                this.tryMove(mx, 0, 0, world);
+                this.tryMove(0, 0, mz, world);
+                this.tryMove(0, this.velocity.y, 0, world);
+                
+                this.velocity.x *= 0.9;
+                this.velocity.z *= 0.9;
+                
+                this.camera.position.copy(this.position);
+                this.camera.position.y += this.height;
+            }
+            
+            tryMove(dx, dy, dz, world) {
+                const newPos = this.position.clone().add(new THREE.Vector3(dx, dy, dz));
+                const minX = Math.floor(newPos.x - 0.3), maxX = Math.floor(newPos.x + 0.3);
+                const minY = Math.floor(newPos.y), maxY = Math.floor(newPos.y + this.height);
+                const minZ = Math.floor(newPos.z - 0.3), maxZ = Math.floor(newPos.z + 0.3);
+                
+                for (let x = minX; x <= maxX; x++) {
+                    for (let y = minY; y <= maxY; y++) {
+                        for (let z = minZ; z <= maxZ; z++) {
+                            const block = world.getBlock(x, y, z);
+                            if (block && block.type !== 'water') {
+                                if (dy < 0) { this.onGround = true; this.velocity.y = 0; }
+                                return;
+                            }
+                        }
+                    }
+                }
+                this.position.copy(newPos);
+                if (dy < 0) this.onGround = false;
+            }
+            
+            getTarget(world) {
+                const dir = new THREE.Vector3(0, 0, -1).applyEuler(this.rotation);
+                for (let d = 0; d < 5; d += 0.1) {
+                    const pos = this.camera.position.clone().add(dir.clone().multiplyScalar(d));
+                    const block = world.getBlock(pos.x, pos.y, pos.z);
+                    if (block) return {
+                        block, x: Math.floor(pos.x), y: Math.floor(pos.y), z: Math.floor(pos.z),
+                        px: Math.floor(this.camera.position.x + dir.x * (d - 0.1)),
+                        py: Math.floor(this.camera.position.y + dir.y * (d - 0.1)),
+                        pz: Math.floor(this.camera.position.z + dir.z * (d - 0.1))
+                    };
+                }
+                return null;
+            }
+            
+            breakBlock() {
+                const t = this.getTarget(window.game.world);
+                if (t) window.game.world.setBlock(t.x, t.y, t.z, null);
+            }
+            
+            placeBlock() {
+                const t = this.getTarget(window.game.world);
+                if (t) window.game.world.setBlock(t.px, t.py, t.pz, this.hotbar[this.selectedSlot]);
+            }
+        }
+
+        // Initialize
+        window.game = new Game();
+        menu.init();
+    </script>
 </body>
 </html>

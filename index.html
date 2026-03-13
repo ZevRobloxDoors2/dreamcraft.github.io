@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dreamcraft</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="CSS/style.css">
     
     <script type="importmap">
         {
@@ -17,15 +17,28 @@
 </head>
 <body>
     <div id="crosshair">+</div>
-
     <canvas id="gameCanvas"></canvas>
     
     <div id="menuContainer">
-        <div class="menu-content">
+        <div id="mainScreen" class="menu-content">
             <h1 class="game-title">Dreamcraft</h1>
-            <button id="playButton" class="mc-button">Play</button>
+            <button id="playMenuButton" class="mc-button">Play</button>
             <button id="settingsButton" class="mc-button">Settings</button>
             <p class="menu-hint">Use W, A, S, D to move. Space to jump. Press ESC to pause.</p>
+        </div>
+
+        <div id="worldScreen" class="menu-content" style="display: none;">
+            <h1 class="game-title" style="font-size: 40px;">Select World</h1>
+            
+            <div class="world-list">
+                <div class="world-item">
+                    <strong>New World</strong><br>
+                    <span style="color: #aaa; font-size: 16px;">Survival Mode, Version 1.0</span>
+                </div>
+            </div>
+
+            <button id="createWorldButton" class="mc-button">Play Selected World</button>
+            <button id="backButton" class="mc-button">Cancel</button>
         </div>
     </div>
 

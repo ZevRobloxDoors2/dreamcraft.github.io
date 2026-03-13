@@ -27,8 +27,15 @@ document.addEventListener('mousedown', (event) => {
         }
     }
 });
+        this.gameState = 'menu';
+        this.clock = new THREE.Clock();
+        this.raycaster = new THREE.Raycaster();
+        this.centerCoords = new THREE.Vector2(0, 0); 
+        this.inventory = []; // Player's collected items
+    }
 
-// Add this hotbar selector logic inside game.init():
+    init() {
+        // Add this hotbar selector logic inside game.init():
 document.addEventListener('keydown', (e) => {
     if (this.gameState !== 'playing') return;
     
@@ -42,14 +49,6 @@ document.addEventListener('keydown', (e) => {
         slots[this.selectedSlot].classList.add('active');
     }
 });
-        this.gameState = 'menu';
-        this.clock = new THREE.Clock();
-        this.raycaster = new THREE.Raycaster();
-        this.centerCoords = new THREE.Vector2(0, 0); 
-        this.inventory = []; // Player's collected items
-    }
-
-    init() {
         this.scene = new THREE.Scene();
         this.scene.background = new THREE.Color(0xFF7E47); 
         this.scene.fog = new THREE.FogExp2(0xFF7E47, 0.015); 

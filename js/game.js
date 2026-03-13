@@ -5,6 +5,43 @@ import { Player } from './player.js';
 
 export class Game {
     constructor() {
+        // Add this inside your Game constructor:
+this.selectedSlot = 0; 
+
+// Replace your mousedown event listener inside game.init() with this:
+document.addEventListener('mousedown', (event) => {
+    if (this.gameState !== 'playing') return;
+
+    this.raycaster.setFromCamera(this.centerCoords, this.camera);
+    const intersects = this.raycaster.intersectObjects(this.world.blocks);
+
+    // REACH LIMIT: Only allow interaction if the block is within 5 units
+    if (intersects.length > 0 && intersects[0].distance <= 5.0) {
+        const intersect = intersects[0];
+        if (event.button === 0) { 
+            this.world.breakBlock(intersect.object);
+        } else if (event.button === 2) { 
+            // In the future, this 'dirt' will be whatever is in this.selectedSlot
+            const pos = intersect.object.position.clone().add(intersect.face.normal);
+            this.world.placeBlock(pos.x, pos.y, pos.z, 'dirt'); 
+        }
+    }
+});
+
+// Add this hotbar selector logic inside game.init():
+document.addEventListener('keydown', (e) => {
+    if (this.gameState !== 'playing') return;
+    
+    // Check if key is a number between 1 and 9
+    if (e.key >= '1' && e.key <= '9') {
+        this.selectedSlot = parseInt(e.key) - 1;
+        
+        // Update UI visuals
+        const slots = document.querySelectorAll('#hotbar .inv-slot');
+        slots.forEach(slot => slot.classList.remove('active'));
+        slots[this.selectedSlot].classList.add('active');
+    }
+});
         this.gameState = 'menu';
         this.clock = new THREE.Clock();
         this.raycaster = new THREE.Raycaster();

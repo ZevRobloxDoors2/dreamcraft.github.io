@@ -2,12 +2,15 @@
 
 html, body {
     margin: 0; padding: 0; overflow: hidden;
-    background-color: #87CEEB;
+    background-color: #000; /* Fallback */
     font-family: 'VT323', monospace;
     user-select: none;
 }
 
-#gameCanvas { display: block; width: 100vw; height: 100vh; }
+#gameCanvas { 
+    position: absolute; top: 0; left: 0; 
+    width: 100vw; height: 100vh; z-index: 1; 
+}
 
 #crosshair {
     position: absolute; top: 50%; left: 50%;
@@ -19,44 +22,65 @@ html, body {
 #uiContainer {
     position: absolute; top: 0; left: 0;
     width: 100%; height: 100%;
-    z-index: 200; display: flex;
+    z-index: 200; 
 }
 
-/* --- The Exact Minecraft Button Texture using CSS --- */
+/* --- The Button Texture --- */
 .mc-button {
-    background-color: #c6c6c6;
-    color: #111;
+    /* Using your exact texture path */
+    background-image: url('../textures/ui/buttons/widgetmenubutton.png');
+    background-size: 100% 100%;
+    background-color: #c6c6c6; /* Fallback if texture doesn't load */
+    color: white;
     font-family: 'VT323', monospace;
     font-size: 24px;
     padding: 12px 20px;
     margin: 5px 0;
-    border: 2px solid #000;
-    /* This creates the 3D classic button bevel */
-    border-top-color: #ffffff;
-    border-left-color: #ffffff;
-    border-bottom-color: #555555;
-    border-right-color: #555555;
+    border: none; /* Removing border because the image has it */
     cursor: pointer;
-    text-shadow: 1px 1px 0px #888;
+    text-shadow: 2px 2px 0px #333;
     width: 300px;
+    height: 50px;
 }
 .mc-button:hover {
-    background-color: #85b96e; /* Hover green */
-    color: white;
-    text-shadow: 1px 1px 0px #333;
+    filter: brightness(1.2); /* Makes the texture lighter on hover */
 }
 
-/* --- Bedrock Main Menu --- */
+/* --- Main Menu (Title Top Middle) --- */
 #mainMenu {
     width: 100%; height: 100%;
-    background: rgba(0,0,0,0.3); /* Dimmed background, would show a rotating 3D scene ideally */
-    display: flex; flex-direction: column; justify-content: center;
-    padding-left: 10%; /* Shifted to the left like Bedrock */
+    display: flex; flex-direction: column; 
+    align-items: center; /* Centers horizontally */
+    background: rgba(0,0,0,0.1); /* Very slight darkening so text pops */
 }
+
+.title-container {
+    position: relative;
+    margin-top: 50px; /* Pushes from the top */
+    margin-bottom: 50px;
+}
+
 .bedrock-title {
-    font-size: 80px; color: white; margin-bottom: 20px; text-shadow: 3px 3px 0 #000;
+    font-size: 90px; color: white; margin: 0; 
+    text-shadow: 4px 4px 0 #333;
 }
-.bedrock-button-stack { display: flex; flex-direction: column; }
+
+/* Yellow Splash Text */
+.splash-text {
+    position: absolute;
+    bottom: -10px; right: -40px;
+    color: #FFFF00; font-size: 30px;
+    transform: rotate(-20deg);
+    text-shadow: 2px 2px 0 #3f3f00;
+    animation: pulse 1s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { transform: rotate(-20deg) scale(1); }
+    100% { transform: rotate(-20deg) scale(1.1); }
+}
+
+.bedrock-button-stack { display: flex; flex-direction: column; align-items: center; }
 
 /* --- Java World Screen --- */
 #worldScreen {
@@ -65,21 +89,30 @@ html, body {
     background-size: 64px; background-blend-mode: multiply; background-color: #555;
     display: flex; flex-direction: column; align-items: center; justify-content: center;
 }
+.java-world-box { text-align: center; }
 .java-title { color: white; font-size: 40px; text-shadow: 2px 2px 0 #000; margin-bottom: 20px;}
 .world-list {
     background: rgba(0,0,0,0.6); border: 2px solid #000; width: 600px; height: 300px;
-    overflow-y: auto; color: white; margin-bottom: 20px; padding: 10px;
+    overflow-y: auto; color: white; margin-bottom: 20px; text-align: left;
 }
 .world-item { padding: 10px; border: 2px solid transparent; cursor: pointer; }
 .world-item:hover { border-color: white; background: rgba(255,255,255,0.1); }
-.java-button-row { display: flex; gap: 20px; }
+.java-button-row { display: flex; gap: 20px; justify-content: center;}
 
-/* --- Basic Crafting UI --- */
-#craftingUI {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
-    background: #c6c6c6; padding: 20px; border: 2px solid #000;
-    border-radius: 2px; display: flex; align-items: center; gap: 20px;
+/* --- Inventory & Hotbar --- */
+#inventoryUI {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center;
 }
-.crafting-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 5px; }
-.slot { width: 50px; height: 50px; background: #8b8b8b; border: 2px solid #373737; border-top-color: #373737; border-left-color: #373737; border-bottom-color: #fff; border-right-color: #fff;}
-.arrow { font-size: 30px; font-family: sans-serif; }
+.inventory-window { background: #c6c6c6; padding: 20px; border: 2px solid #000; border-radius: 4px; }
+.inventory-grid { display: grid; grid-template-columns: repeat(9, 1fr); gap: 4px; margin-top: 10px;}
+.inv-slot { 
+    width: 40px; height: 40px; background: #8b8b8b; 
+    border: 2px solid #373737; border-bottom-color: #fff; border-right-color: #fff;
+}
+#hotbar {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 2px; padding: 4px; background: rgba(0,0,0,0.4); border: 2px solid #000; z-index: 100;
+}
+#hotbar .inv-slot { width: 44px; height: 44px; }
+#hotbar .active { border: 3px solid white; } /* Highlights selected slot */

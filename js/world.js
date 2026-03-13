@@ -1,99 +1,57 @@
-import { Block } from './block.js'; // Assuming you'll have a Block class
+import * as THREE from 'three';
 
 export class World {
-    constructor() {
-        this.chunks = new Map(); // Stores chunks: Map<chunkKey, ChunkData>
-        this.blocks = {}; // A simpler flat map for individual blocks (x,y,z -> blockType) for quick lookup
-        this.blockSize = 1; // Size of a single block in world units
+    constructor(scene) {
+        this.scene = scene;
+        
+        // Texture Loader setup
+        const textureLoader = new THREE.TextureLoader();
+        
+        // Load textures from your folders.
+        // NearestFilter makes them look pixelated and blocky like Minecraft!
+        const loadTex = (path) => {
+            const tex = textureLoader.load(path);
+            tex.magFilter = THREE.NearestFilter; 
+            tex.minFilter = THREE.NearestFilter;
+            return tex;
+        }
+
+        const grassTop = loadTex('textures/grass.png');
+        const grassSide = loadTex('textures/grass_side.png');
+        const dirt = loadTex('textures/dirt.png');
+
+        // Create an array of materials for the Box Geometry
+        // Order: right, left, top, bottom, front, back
+        this.grassMaterial = [
+            new THREE.MeshLambertMaterial({ map: grassSide }), // Right
+            new THREE.MeshLambertMaterial({ map: grassSide }), // Left
+            new THREE.MeshLambertMaterial({ map: grassTop }),  // Top
+            new THREE.MeshLambertMaterial({ map: dirt }),      // Bottom
+            new THREE.MeshLambertMaterial({ map: grassSide }), // Front
+            new THREE.MeshLambertMaterial({ map: grassSide })  // Back
+        ];
+
+        this.dirtMaterial = new THREE.MeshLambertMaterial({ map: dirt });
+        this.blockGeometry = new THREE.BoxGeometry(1, 1, 1);
     }
 
-    // Generates a chunk of blocks at a specific chunk coordinate
-    generateChunk(chunkX, chunkY, chunkZ) {
-        const chunkSize = 16; // 16x16x16 blocks per chunk
-        const chunkKey = `${chunkX},${chunkY},${chunkZ}`;
-        console.log(`Generating chunk at ${chunkKey}`);
+    generate() {
+        const chunkSize = 16;
+        
+        // Generate a simple flat 16x16 platform of grass with dirt underneath
+        for (let x = -chunkSize/2; x < chunkSize/2; x++) {
+            for (let z = -chunkSize/2; z < chunkSize/2; z++) {
+                
+                // Top Grass Block
+                const grassBlock = new THREE.Mesh(this.blockGeometry, this.grassMaterial);
+                grassBlock.position.set(x, 0, z);
+                this.scene.add(grassBlock);
 
-        const newChunkBlocks = [];
-
-        for (let x = 0; x < chunkSize; x++) {
-            for (let z = 0; z < chunkSize; z++) {
-                // Simple flat world generation for now
-                const worldX = chunkX * chunkSize + x;
-                const worldZ = chunkZ * chunkSize + z;
-                const groundHeight = Math.floor(Math.sin(worldX * 0.1) * 2 + Math.cos(worldZ * 0.1) * 2) + 5; // Basic terrain
-
-                for (let y = 0; y < chunkSize; y++) {
-                    const worldY = chunkY * chunkSize + y;
-
-                    let blockType = 'air';
-                    if (worldY < groundHeight - 3) {
-                        blockType = 'stone';
-                    } else if (worldY < groundHeight) {
-                        blockType = 'dirt';
-                    } else if (worldY === groundHeight) {
-                        blockType = 'grass';
-                    }
-
-                    if (blockType !== 'air') {
-                        const block = new Block(worldX, worldY, worldZ, blockType);
-                        newChunkBlocks.push(block);
-                        this.setBlock(worldX, worldY, worldZ, block);
-                    }
-                }
+                // Dirt Block underneath
+                const dirtBlock = new THREE.Mesh(this.blockGeometry, this.dirtMaterial);
+                dirtBlock.position.set(x, -1, z);
+                this.scene.add(dirtBlock);
             }
         }
-        this.chunks.set(chunkKey, newChunkBlocks);
-        console.log(`Chunk ${chunkKey} generated with ${newChunkBlocks.length} blocks.`);
     }
-
-    // Sets a block at specific world coordinates
-    setBlock(x, y, z, block) {
-        this.blocks[`${x},${y},${z}`] = block;
-    }
-
-    // Gets a block at specific world coordinates
-    getBlock(x, y, z) {
-        return this.blocks[`${x},${y},${z}`] || null;
-    }
-
-    // Adds all blocks from loaded chunks to a Three.js scene (or equivalent)
-    addBlocksToScene(scene) {
-        console.log("Adding blocks to scene...");
-        this.chunks.forEach(chunkBlocks => {
-            chunkBlocks.forEach(block => {
-                // In a real Three.js implementation, you'd create a Mesh for each block
-                // For now, we'll just log
-                // const geometry = new THREE.BoxGeometry(this.blockSize, this.blockSize, this.blockSize);
-                // const material = new THREE.MeshBasicMaterial({ color: block.color }); // Block should define color/texture
-                // const mesh = new THREE.Mesh(geometry, material);
-                // mesh.position.set(block.x, block.y, block.z);
-                // scene.add(mesh);
-                scene.add({ type: 'block', x: block.x, y: block.y, z: block.z, material: block.type });
-            });
-        });
-        console.log("All blocks added (mock).");
-    }
-
-    // Raycasting for block interaction (breaking/placing)
-    raycast(origin, direction, maxDistance) {
-        // Implement DDA (Digital Differential Analyzer) algorithm or similar for raycasting
-        // to find which block the player is looking at.
-        // This is a complex topic on its own.
-        console.log(`Raycasting from ${JSON.stringify(origin)} in direction ${JSON.stringify(direction)}`);
-        return null; // Returns null or { block: Block, face: 'top'|'bottom'|... }
-    }
-}
-
-// A simple Block class to hold block data
-export class Block {
-    constructor(x, y, z, type) {
-        this.x = x;
-        this.y = y;
-        this.z = z;
-        this.type = type; // e.g., 'grass', 'dirt', 'stone', 'air'
-        this.isVisible = true; // For optimization
-    }
-
-    // You might add methods to get texture coordinates based on type
-    // or calculate its bounding box.
 }

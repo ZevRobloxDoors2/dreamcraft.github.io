@@ -19,27 +19,41 @@
     <div id="crosshair">+</div>
     <canvas id="gameCanvas"></canvas>
     
-    <div id="menuContainer">
-        <div id="mainScreen" class="menu-content">
-            <h1 class="game-title">Dreamcraft</h1>
-            <button id="playMenuButton" class="mc-button">Play</button>
-            <button id="settingsButton" class="mc-button">Settings</button>
-            <p class="menu-hint">Use W, A, S, D to move. Space to jump. Press ESC to pause.</p>
+    <div id="uiContainer">
+        
+        <div id="mainMenu">
+            <h1 class="bedrock-title">Dreamcraft</h1>
+            <div class="bedrock-button-stack">
+                <button id="playMenuButton" class="mc-button">Play</button>
+                <button id="settingsButton" class="mc-button">Settings</button>
+                <button id="marketplaceButton" class="mc-button">Marketplace</button>
+            </div>
         </div>
 
-        <div id="worldScreen" class="menu-content" style="display: none;">
-            <h1 class="game-title" style="font-size: 40px;">Select World</h1>
-            
+        <div id="worldScreen" style="display: none;">
+            <h1 class="java-title">Select World</h1>
             <div class="world-list">
                 <div class="world-item">
                     <strong>New World</strong><br>
                     <span style="color: #aaa; font-size: 16px;">Survival Mode, Version 1.0</span>
                 </div>
             </div>
-
-            <button id="createWorldButton" class="mc-button">Play Selected World</button>
-            <button id="backButton" class="mc-button">Cancel</button>
+            <div class="java-button-row">
+                <button id="createWorldButton" class="mc-button">Play Selected World</button>
+                <button id="backButton" class="mc-button">Cancel</button>
+            </div>
         </div>
+
+        <div id="craftingUI" style="display: none;">
+            <h2>Crafting</h2>
+            <div class="crafting-grid">
+                <div class="slot"></div><div class="slot"></div>
+                <div class="slot"></div><div class="slot"></div>
+            </div>
+            <div class="arrow">➔</div>
+            <div class="slot result-slot"></div>
+        </div>
+
     </div>
 
     <script type="module" src="js/main.js"></script>

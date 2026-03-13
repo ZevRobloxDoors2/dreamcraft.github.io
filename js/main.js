@@ -1,57 +1,25 @@
 import { Game } from './game.js';
-import { Menu } from './menu.js';
-
-let game;
-let menu;
 
 document.addEventListener('DOMContentLoaded', () => {
-    const canvas = document.getElementById('gameCanvas');
-    const debugInfo = document.getElementById('debugInfo');
     const menuContainer = document.getElementById('menuContainer');
-
-    // Initialize the game
-    game = new Game(canvas, debugInfo);
+    const playButton = document.getElementById('playButton');
+    
+    // Initialize the game engine
+    const game = new Game();
     game.init();
 
-    // Initialize the menu
-    menu = new Menu(menuContainer);
-
-    // Lock pointer for first-person controls
-    canvas.addEventListener('click', () => {
-        if (!document.pointerLockElement) {
-            canvas.requestPointerLock();
-        }
+    // Handle the "Play" button click
+    playButton.addEventListener('click', () => {
+        game.start();
+        menuContainer.style.display = 'none'; // Hide menu
     });
 
+    // Listen for when the player hits ESC to unlock the mouse
     document.addEventListener('pointerlockchange', () => {
-        if (document.pointerLockElement === canvas) {
-            console.log('Pointer locked!');
-            game.setPaused(false); // Unpause game when pointer is locked
-            menu.hide();
-        } else {
-            console.log('Pointer unlocked!');
-            game.setPaused(true); // Pause game when pointer is unlocked
-            menu.show();
+        if (document.pointerLockElement !== document.body) {
+            game.pause();
+            menuContainer.style.display = 'flex'; // Show menu again
+            playButton.innerText = "Resume Game";
         }
     });
-
-    // Main game loop
-    let lastTime = 0;
-    function animate(currentTime) {
-        const deltaTime = (currentTime - lastTime) / 1000; // Convert to seconds
-        lastTime = currentTime;
-
-        if (!game.isPaused()) {
-            game.update(deltaTime);
-            game.render();
-        } else {
-            // Render menu or static pause screen
-        }
-
-        requestAnimationFrame(animate);
-    }
-
-    requestAnimationFrame(animate);
-
-    console.log("Mycraft loaded!");
 });

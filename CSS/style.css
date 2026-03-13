@@ -116,3 +116,38 @@ html, body {
 }
 #hotbar .inv-slot { width: 44px; height: 44px; }
 #hotbar .active { border: 3px solid white; } /* Highlights selected slot */
+
+/* --- HUD Formatting --- */
+#hud {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: column; align-items: center; z-index: 100;
+}
+
+#healthBar {
+    display: flex; gap: 2px; margin-bottom: 5px; height: 20px;
+}
+
+.heart {
+    width: 18px; height: 18px;
+    background-image: url('../textures/player/heart.png');
+    background-size: cover;
+    image-rendering: pixelated; /* Keeps pixel art sharp */
+}
+
+.heart.empty {
+    filter: grayscale(100%) brightness(0.3); /* Dims the heart when damage is taken */
+}
+
+/* Low health panic animation */
+@keyframes heartBob {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+    100% { transform: translateY(0px); }
+}
+
+.low-health .heart {
+    animation: heartBob 0.5s infinite;
+}
+/* Randomize the bobbing slightly so they don't all move exactly at the same time */
+.low-health .heart:nth-child(even) { animation-delay: 0.1s; }
+.low-health .heart:nth-child(3n) { animation-delay: 0.2s; }

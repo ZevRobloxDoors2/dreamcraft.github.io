@@ -4,8 +4,8 @@ html, body {
     margin: 0;
     padding: 0;
     overflow: hidden;
-    background-color: #87CEEB; /* Sky blue background */
-    font-family: 'VT323', monospace; /* Blocky retro font */
+    background-color: #87CEEB;
+    font-family: 'VT323', monospace;
 }
 
 #gameCanvas {
@@ -25,7 +25,6 @@ html, body {
     z-index: 10;
 }
 
-/* --- Bedrock Style Menu --- */
 #menuContainer {
     position: absolute;
     top: 0;
@@ -33,7 +32,7 @@ html, body {
     width: 100%;
     height: 100%;
     background-color: rgba(0, 0, 0, 0.6);
-    background-image: url('../textures/dirt.png'); /* Falls back to dark if dirt isn't loaded */
+    background-image: url('../textures/dirt.png'); 
     background-size: 64px;
     background-blend-mode: multiply;
     display: flex;
@@ -49,7 +48,7 @@ html, body {
     border-radius: 2px;
     box-shadow: inset -4px -4px 0px rgba(0,0,0,0.2), inset 4px 4px 0px rgba(255,255,255,0.5);
     text-align: center;
-    width: 400px;
+    width: 450px;
 }
 
 .game-title {
@@ -76,13 +75,31 @@ html, body {
 }
 
 .mc-button:hover {
-    background-color: #63924f; /* Green highlight like Bedrock */
+    background-color: #63924f;
     color: white;
     box-shadow: inset -3px -3px 0px #3c5d2d, inset 3px 3px 0px #85b96e;
 }
 
-.menu-hint {
-    font-size: 20px;
-    color: #444;
-    margin-top: 20px;
+/* --- New Java-Style World List --- */
+.world-list {
+    background-color: rgba(0, 0, 0, 0.8);
+    border: 2px solid #888;
+    box-shadow: inset 2px 2px 5px rgba(0,0,0,0.8);
+    height: 180px;
+    margin-bottom: 20px;
+    overflow-y: auto;
+    text-align: left;
+}
+
+.world-item {
+    padding: 15px;
+    color: #fff;
+    font-size: 22px;
+    border-bottom: 2px solid #333;
+    cursor: pointer;
+}
+
+.world-item:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border: 2px solid #fff;
 }

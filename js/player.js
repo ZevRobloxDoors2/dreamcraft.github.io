@@ -1,117 +1,81 @@
-import { InputManager } from './input.js'; // You'll need an input manager
+import * as THREE from 'three';
 
 export class Player {
-    constructor(camera) {
-        this.camera = camera; // The camera is essentially the player's view
-        this.position = { x: 0, y: 0, z: 0 };
-        this.velocity = { x: 0, y: 0, z: 0 };
-        this.rotation = { x: 0, y: 0 }; // x for up/down, y for left/right
+    constructor(controls, camera) {
+        this.controls = controls;
+        this.camera = camera;
+        
+        this.velocity = new THREE.Vector3();
+        this.direction = new THREE.Vector3();
+        
+        // Movement settings
+        this.speed = 10.0;
+        this.jumpForce = 8.0;
+        this.gravity = 20.0;
+        
+        this.canJump = false;
 
-        this.moveSpeed = 8; // Blocks per second
-        this.jumpStrength = 15;
-        this.gravity = -30;
-        this.onGround = false;
-        this.height = 1.8; // Player height in blocks
+        // Start player slightly above the ground
+        this.camera.position.set(0, 2, 0);
 
-        this.input = new InputManager(); // Initialize input handling
-
-        this.setupPointerLockControls();
+        this.setupInputs();
     }
 
-    setPosition(x, y, z) {
-        this.position.x = x;
-        this.position.y = y;
-        this.position.z = z;
-        this.camera.position.set(x, y + this.height, z); // Camera is at eye level
-    }
+    setupInputs() {
+        this.moveForward = false;
+        this.moveBackward = false;
+        this.moveLeft = false;
+        this.moveRight = false;
 
-    getPosition() {
-        return { x: this.position.x, y: this.position.y, z: this.position.z };
-    }
+        document.addEventListener('keydown', (event) => {
+            switch (event.code) {
+                case 'KeyW': this.moveForward = true; break;
+                case 'KeyA': this.moveLeft = true; break;
+                case 'KeyS': this.moveBackward = true; break;
+                case 'KeyD': this.moveRight = true; break;
+                case 'Space': 
+                    if (this.canJump === true) this.velocity.y += this.jumpForce;
+                    this.canJump = false;
+                    break;
+            }
+        });
 
-    setupPointerLockControls() {
-        document.addEventListener('mousemove', (event) => {
-            if (document.pointerLockElement) {
-                const movementX = event.movementX || 0;
-                const movementY = event.movementY || 0;
-
-                const sensitivity = 0.002; // Adjust sensitivity as needed
-                this.rotation.y -= movementX * sensitivity; // Yaw (left/right)
-                this.rotation.x -= movementY * sensitivity; // Pitch (up/down)
-
-                // Clamp pitch to prevent flipping
-                this.rotation.x = Math.max(-Math.PI / 2, Math.min(Math.PI / 2, this.rotation.x));
-
-                // Update camera rotation (example for Three.js)
-                // this.camera.rotation.y = this.rotation.y;
-                // this.camera.rotation.x = this.rotation.x;
+        document.addEventListener('keyup', (event) => {
+            switch (event.code) {
+                case 'KeyW': this.moveForward = false; break;
+                case 'KeyA': this.moveLeft = false; break;
+                case 'KeyS': this.moveBackward = false; break;
+                case 'KeyD': this.moveRight = false; break;
             }
         });
     }
 
-    update(deltaTime) {
-        // Apply gravity
-        this.velocity.y += this.gravity * deltaTime;
+    update(delta) {
+        // Apply Gravity
+        this.velocity.y -= this.gravity * delta;
 
-        // Reset X and Z velocity for movement each frame
-        this.velocity.x = 0;
-        this.velocity.z = 0;
+        // Handle WASD friction/velocity
+        this.velocity.x -= this.velocity.x * 10.0 * delta;
+        this.velocity.z -= this.velocity.z * 10.0 * delta;
 
-        // Player movement based on input (e.g., WASD)
-        const forward = new THREE.Vector3(0, 0, -1).applyEuler(this.camera.rotation);
-        const right = new THREE.Vector3(1, 0, 0).applyEuler(this.camera.rotation);
+        this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
+        this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
+        this.direction.normalize(); // Ensure consistent speed in all directions
 
-        if (this.input.isKeyDown('KeyW')) {
-            this.velocity.x += forward.x * this.moveSpeed;
-            this.velocity.z += forward.z * this.moveSpeed;
-        }
-        if (this.input.isKeyDown('KeyS')) {
-            this.velocity.x -= forward.x * this.moveSpeed;
-            this.velocity.z -= forward.z * this.moveSpeed;
-        }
-        if (this.input.isKeyDown('KeyA')) {
-            this.velocity.x -= right.x * this.moveSpeed;
-            this.velocity.z -= right.z * this.moveSpeed;
-        }
-        if (this.input.isKeyDown('KeyD')) {
-            this.velocity.x += right.x * this.moveSpeed;
-            this.velocity.z += right.z * this.moveSpeed;
-        }
+        if (this.moveForward || this.moveBackward) this.velocity.z -= this.direction.z * this.speed * delta;
+        if (this.moveLeft || this.moveRight) this.velocity.x -= this.direction.x * this.speed * delta;
 
-        if (this.input.isKeyDown('Space') && this.onGround) {
-            this.velocity.y = this.jumpStrength;
-            this.onGround = false;
-        }
+        // Apply movement to the controls/camera
+        this.controls.moveRight(-this.velocity.x * delta);
+        this.controls.moveForward(-this.velocity.z * delta);
+        
+        this.camera.position.y += (this.velocity.y * delta);
 
-        // Update position based on velocity
-        this.position.x += this.velocity.x * deltaTime;
-        this.position.y += this.velocity.y * deltaTime;
-        this.position.z += this.velocity.z * deltaTime;
-
-        // Simple ground collision (replace with proper physics later)
-        if (this.position.y < 0) { // Assuming ground is at y=0
-            this.position.y = 0;
+        // Simple Ground Collision (The ground is at Y = 0, camera is at Y = 2)
+        if (this.camera.position.y < 2) {
             this.velocity.y = 0;
-            this.onGround = true;
-        } else {
-            this.onGround = false; // More sophisticated check needed
+            this.camera.position.y = 2;
+            this.canJump = true;
         }
-
-        // Update camera position
-        this.camera.position.set(this.position.x, this.position.y + this.height, this.position.z);
-    }
-}
-
-// A simple InputManager to track key states
-// This would ideally be in its own file, e.g., `js/input.js`
-export class InputManager {
-    constructor() {
-        this.keys = {};
-        document.addEventListener('keydown', (e) => this.keys[e.code] = true);
-        document.addEventListener('keyup', (e) => this.keys[e.code] = false);
-    }
-
-    isKeyDown(keyCode) {
-        return this.keys[keyCode];
     }
 }

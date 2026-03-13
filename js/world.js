@@ -43,7 +43,22 @@ export class World {
 
     // --- NEW: Break Effects & Drops ---
     breakBlock(blockMesh) {
-        // ... (Keep your existing particle logic here) ...
+        // 1. Create Particles (Cookie breaking effect)
+        for (let i = 0; i < 8; i++) {
+            const particle = new THREE.Mesh(
+                new THREE.BoxGeometry(0.2, 0.2, 0.2),
+                blockMesh.material
+            );
+            particle.position.copy(blockMesh.position);
+            // Random explosion direction
+            particle.userData.velocity = new THREE.Vector3(
+                (Math.random() - 0.5) * 5,
+                Math.random() * 5,
+                (Math.random() - 0.5) * 5
+            );
+            this.scene.add(particle);
+            this.particles.push(particle);
+        }
 
         // GRASS TO DIRT LOGIC
         let droppedType = blockMesh.userData.type;
@@ -64,22 +79,6 @@ export class World {
         this.scene.remove(blockMesh);
         this.blocks = this.blocks.filter(b => b !== blockMesh);
     }
-        // 1. Create Particles (Cookie breaking effect)
-        for (let i = 0; i < 8; i++) {
-            const particle = new THREE.Mesh(
-                new THREE.BoxGeometry(0.2, 0.2, 0.2),
-                blockMesh.material
-            );
-            particle.position.copy(blockMesh.position);
-            // Random explosion direction
-            particle.userData.velocity = new THREE.Vector3(
-                (Math.random() - 0.5) * 5,
-                Math.random() * 5,
-                (Math.random() - 0.5) * 5
-            );
-            this.scene.add(particle);
-            this.particles.push(particle);
-        }
 
         // 2. Spawn Floating Dropped Item
         const item = new THREE.Mesh(

@@ -16,13 +16,18 @@
     </script>
 </head>
 <body>
-    <div id="crosshair">+</div>
     <canvas id="gameCanvas"></canvas>
     
+    <div id="crosshair" style="display: none;">+</div>
+
     <div id="uiContainer">
         
         <div id="mainMenu">
-            <h1 class="bedrock-title">Dreamcraft</h1>
+            <div class="title-container">
+                <h1 class="bedrock-title">Dreamcraft</h1>
+                <div class="splash-text">Now with Trees!</div>
+            </div>
+            
             <div class="bedrock-button-stack">
                 <button id="playMenuButton" class="mc-button">Play</button>
                 <button id="settingsButton" class="mc-button">Settings</button>
@@ -31,29 +36,43 @@
         </div>
 
         <div id="worldScreen" style="display: none;">
-            <h1 class="java-title">Select World</h1>
-            <div class="world-list">
-                <div class="world-item">
-                    <strong>New World</strong><br>
-                    <span style="color: #aaa; font-size: 16px;">Survival Mode, Version 1.0</span>
+            <div class="java-world-box">
+                <h1 class="java-title">Select World</h1>
+                <div class="world-list">
+                    <div class="world-item">
+                        <strong>New World</strong><br>
+                        <span style="color: #aaa; font-size: 16px;">Survival Mode, Version 1.0</span>
+                    </div>
+                </div>
+                <div class="java-button-row">
+                    <button id="createWorldButton" class="mc-button">Play Selected World</button>
+                    <button id="backButton" class="mc-button">Cancel</button>
                 </div>
             </div>
-            <div class="java-button-row">
-                <button id="createWorldButton" class="mc-button">Play Selected World</button>
-                <button id="backButton" class="mc-button">Cancel</button>
-            </div>
         </div>
 
-        <div id="craftingUI" style="display: none;">
-            <h2>Crafting</h2>
-            <div class="crafting-grid">
-                <div class="slot"></div><div class="slot"></div>
-                <div class="slot"></div><div class="slot"></div>
+        <div id="inventoryUI" style="display: none;">
+            <div class="inventory-window">
+                <h2>Inventory</h2>
+                <div class="inventory-grid">
+                    <script>
+                        for(let i=0; i<27; i++) document.write('<div class="inv-slot"></div>');
+                    </script>
+                </div>
             </div>
-            <div class="arrow">➔</div>
-            <div class="slot result-slot"></div>
         </div>
+    </div>
 
+    <div id="hotbar" style="display: none;">
+        <div class="inv-slot active"></div>
+        <div class="inv-slot"></div>
+        <div class="inv-slot"></div>
+        <div class="inv-slot"></div>
+        <div class="inv-slot"></div>
+        <div class="inv-slot"></div>
+        <div class="inv-slot"></div>
+        <div class="inv-slot"></div>
+        <div class="inv-slot"></div>
     </div>
 
     <script type="module" src="js/main.js"></script>

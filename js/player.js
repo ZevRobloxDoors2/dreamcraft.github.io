@@ -1,21 +1,23 @@
 import * as THREE from 'three';
 
 export class Player {
-    constructor(controls, camera) {
+    constructor(controls, camera, world) {
         this.controls = controls;
         this.camera = camera;
+        this.world = world; // Needs access to the world blocks for collision
         
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
         
-        this.speed = 10.0;
-        this.jumpForce = 8.0;
-        this.gravity = 20.0;
+        this.speed = 8.0;
+        this.jumpForce = 7.0;
+        this.gravity = 25.0;
         this.canJump = false;
+        
+        this.playerHeight = 1.62;
+        this.camera.position.set(0, 10, 0); // Drop in from the sky!
 
-        // Player height set to 1.62 (Standard Minecraft eye level)
-        this.camera.position.set(0, 1.62, 0);
-
+        this.raycaster = new THREE.Raycaster();
         this.setupInputs();
     }
 
@@ -32,8 +34,10 @@ export class Player {
                 case 'KeyS': this.moveBackward = true; break;
                 case 'KeyD': this.moveRight = true; break;
                 case 'Space': 
-                    if (this.canJump === true) this.velocity.y += this.jumpForce;
-                    this.canJump = false;
+                    if (this.canJump) {
+                        this.velocity.y = this.jumpForce;
+                        this.canJump = false;
+                    }
                     break;
             }
         });
@@ -49,7 +53,7 @@ export class Player {
     }
 
     update(delta) {
-        this.velocity.y -= this.gravity * delta;
+        // 1. Horizontal Movement Logic
         this.velocity.x -= this.velocity.x * 10.0 * delta;
         this.velocity.z -= this.velocity.z * 10.0 * delta;
 
@@ -60,16 +64,38 @@ export class Player {
         if (this.moveForward || this.moveBackward) this.velocity.z -= this.direction.z * this.speed * delta;
         if (this.moveLeft || this.moveRight) this.velocity.x -= this.direction.x * this.speed * delta;
 
-        this.controls.moveRight(-this.velocity.x * delta);
-        this.controls.moveForward(-this.velocity.z * delta);
-        
-        this.camera.position.y += (this.velocity.y * delta);
+        // 2. Horizontal Collision (Stop phasing through walls)
+        const currentPos = this.camera.position.clone();
+        let moveX = -this.velocity.x * delta;
+        let moveZ = -this.velocity.z * delta;
 
-        // Update ground collision to match new height of 1.62
-        if (this.camera.position.y < 1.62) {
-            this.velocity.y = 0;
-            this.camera.position.y = 1.62;
-            this.canJump = true;
+        // 3. Gravity & Floor Collision
+        this.velocity.y -= this.gravity * delta;
+        let nextY = this.camera.position.y + (this.velocity.y * delta);
+        
+        // Raycast straight down from the camera
+        this.raycaster.set(this.camera.position, new THREE.Vector3(0, -1, 0));
+        const floorIntersects = this.raycaster.intersectObjects(this.world.blocks);
+
+        if (floorIntersects.length > 0) {
+            const distToFloor = floorIntersects[0].distance;
+            // If we are falling and about to hit the floor
+            if (this.velocity.y <= 0 && distToFloor <= this.playerHeight) {
+                this.velocity.y = 0;
+                nextY = floorIntersects[0].point.y + this.playerHeight;
+                this.canJump = true;
+            } else if (distToFloor > this.playerHeight) {
+                // If the distance to the floor is greater than player height, we are over a hole!
+                this.canJump = false; 
+            }
+        } else {
+            // Nothing under us (void)
+            this.canJump = false;
         }
+
+        // Apply all movements safely
+        this.controls.moveRight(moveX);
+        this.controls.moveForward(moveZ);
+        this.camera.position.y = nextY;
     }
 }

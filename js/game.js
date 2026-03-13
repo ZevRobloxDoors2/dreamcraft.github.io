@@ -1,96 +1,70 @@
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 import { World } from './world.js';
 import { Player } from './player.js';
 
 export class Game {
-    constructor(canvas, debugInfoElement) {
-        this.canvas = canvas;
-        this.debugInfoElement = debugInfoElement;
-        this.renderer = null; // e.g., Three.js WebGLRenderer
-        this.scene = null;   // e.g., Three.js Scene
-        this.camera = null;  // e.g., Three.js PerspectiveCamera
-
-        this.world = null;
-        this.player = null;
-
-        this.isGamePaused = true; // Start paused, waiting for pointer lock
+    constructor() {
+        this.isRunning = false;
+        this.clock = new THREE.Clock();
     }
 
     init() {
-        // --- Setup Renderer, Scene, Camera (e.g., using Three.js) ---
-        // For a simple demo, let's assume a basic setup.
-        // In a real scenario, you'd integrate Three.js here.
-        // Example:
-        // this.scene = new THREE.Scene();
-        // this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        // this.renderer = new THREE.WebGLRenderer({ canvas: this.canvas });
-        // this.renderer.setSize(window.innerWidth, window.innerHeight);
-        // document.body.appendChild(this.renderer.domElement);
-        // this.camera.position.set(0, 10, 0); // Player starting position
+        // 1. Create the Scene and Camera
+        this.scene = new THREE.Scene();
+        this.scene.background = new THREE.Color(0x87CEEB); // Sky color
+        this.scene.fog = new THREE.Fog(0x87CEEB, 10, 50); // Add some fog
 
-        // For now, let's mock these for structure
-        console.log("Game initialized with Canvas:", this.canvas);
-        this.scene = { add: (obj) => console.log("Adding to scene:", obj) };
-        this.camera = { position: { x: 0, y: 10, z: 0 } };
-        this.renderer = { render: (scene, camera) => { /* Mock render */ } };
+        this.camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
+        // 2. Create the Renderer
+        this.renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('gameCanvas') });
+        this.renderer.setSize(window.innerWidth, window.innerHeight);
+        this.renderer.setPixelRatio(window.devicePixelRatio);
 
-        this.world = new World();
-        this.world.generateChunk(0, 0, 0); // Generate a starting chunk
-        this.world.addBlocksToScene(this.scene); // Add generated blocks to the scene
+        // 3. Add Lighting (Sunlight)
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        this.scene.add(ambientLight);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+        directionalLight.position.set(10, 20, 10);
+        this.scene.add(directionalLight);
 
-        this.player = new Player(this.camera); // Player controls the camera
-        this.player.setPosition(0, 10, 0); // Initial player position
+        // 4. Setup Controls (First Person)
+        this.controls = new PointerLockControls(this.camera, document.body);
 
-        // Event listeners for window resize (important for camera aspect ratio)
-        window.addEventListener('resize', this.onWindowResize.bind(this));
+        // 5. Initialize World and Player
+        this.world = new World(this.scene);
+        this.world.generate();
+
+        this.player = new Player(this.controls, this.camera);
+
+        // Handle window resizing
+        window.addEventListener('resize', () => {
+            this.camera.aspect = window.innerWidth / window.innerHeight;
+            this.camera.updateProjectionMatrix();
+            this.renderer.setSize(window.innerWidth, window.innerHeight);
+        });
     }
 
-    onWindowResize() {
-        // if (this.camera && this.renderer) {
-        //     this.camera.aspect = window.innerWidth / window.innerHeight;
-        //     this.camera.updateProjectionMatrix();
-        //     this.renderer.setSize(window.innerWidth, window.innerHeight);
-        // }
+    start() {
+        this.controls.lock(); // Locks the mouse to the game
+        this.isRunning = true;
+        this.clock.start();
+        this.animate();
     }
 
-    update(deltaTime) {
-        if (this.isGamePaused) return;
-
-        this.player.update(deltaTime);
-        // Potentially update world (e.g., load new chunks, physics)
-
-        this.updateDebugInfo();
+    pause() {
+        this.isRunning = false;
     }
 
-    render() {
-        // This is where your rendering library (e.g., Three.js) would draw the scene
-        // For Three.js: this.renderer.render(this.scene, this.camera);
-    }
+    animate() {
+        if (!this.isRunning) return;
 
-    setPaused(paused) {
-        this.isGamePaused = paused;
-        if (paused) {
-            // Potentially show a pause screen or menu
-        } else {
-            // Resume game elements
-        }
-    }
+        requestAnimationFrame(() => this.animate());
 
-    isPaused() {
-        return this.isGamePaused;
-    }
+        const delta = this.clock.getDelta();
 
-    updateDebugInfo() {
-        if (this.debugInfoElement && this.player) {
-            const pos = this.player.getPosition();
-            this.debugInfoElement.innerHTML = `
-                FPS: ${Math.round(1 / Game.deltaTime)}<br>
-                X: ${pos.x.toFixed(2)}<br>
-                Y: ${pos.y.toFixed(2)}<br>
-                Z: ${pos.z.toFixed(2)}
-            `;
-        }
+        this.player.update(delta);
+        this.renderer.render(this.scene, this.camera);
     }
-
-    static deltaTime = 0; // Static property to easily access delta time for debug
 }

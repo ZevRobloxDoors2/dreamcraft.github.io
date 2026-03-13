@@ -3,18 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mycraft</title>
+    <title>Dreamcraft</title>
     <link rel="stylesheet" href="css/style.css">
+    
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
 <body>
-    <canvas id="gameCanvas"></canvas>
-    <div id="debugInfo"></div>
-    <div id="menuContainer"></div>
+    <div id="crosshair">+</div>
 
-    <script src="js/world.js"></script>
-    <script src="js/player.js"></script>
-    <script src="js/game.js"></script>
-    <script src="js/menu.js"></script>
-    <script src="js/main.js"></script>
+    <canvas id="gameCanvas"></canvas>
+    
+    <div id="menuContainer">
+        <div class="menu-content">
+            <h1 class="game-title">Dreamcraft</h1>
+            <button id="playButton" class="mc-button">Play</button>
+            <button id="settingsButton" class="mc-button">Settings</button>
+            <p class="menu-hint">Use W, A, S, D to move. Space to jump. Press ESC to pause.</p>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>

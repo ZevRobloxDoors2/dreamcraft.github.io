@@ -1,80 +1,89 @@
 import * as THREE from 'three';
+import { PointerLockControls } from 'three/examples/jsm/controls/PointerLockControls.js';
+import { World } from './world';
 
 export class Player {
-    constructor(controls, camera, world) {
+    controls: PointerLockControls;
+    camera: THREE.PerspectiveCamera;
+    world: World;
+    velocity: THREE.Vector3;
+    direction: THREE.Vector3;
+    baseSpeed: number;
+    sprintSpeed: number;
+    currentSpeed: number;
+    jumpForce: number;
+    gravity: number;
+    canJump: boolean;
+    playerHeight: number;
+    maxHealth: number;
+    health: number;
+    previousYVelocity: number;
+    lastWPressTime: number;
+    isSprinting: boolean;
+    raycaster: THREE.Raycaster;
+    moveForward: boolean;
+    moveBackward: boolean;
+    moveLeft: boolean;
+    moveRight: boolean;
+    onHealthChange?: (health: number) => void;
+
+    constructor(controls: PointerLockControls, camera: THREE.PerspectiveCamera, world: World, onHealthChange?: (h: number) => void) {
         this.controls = controls;
         this.camera = camera;
-        this.world = world; 
-        
+        this.world = world;
+        this.onHealthChange = onHealthChange;
+
         this.velocity = new THREE.Vector3();
         this.direction = new THREE.Vector3();
-        
+
         this.baseSpeed = 8.0;
         this.sprintSpeed = 14.0;
         this.currentSpeed = this.baseSpeed;
-        
+
         this.jumpForce = 8.0;
         this.gravity = 25.0;
         this.canJump = false;
-        
-        this.playerHeight = 1.62;
-        this.camera.position.set(0, 10, 0); 
 
-        this.maxHealth = 20; 
+        this.playerHeight = 1.62;
+        this.camera.position.set(0, 10, 0);
+
+        this.maxHealth = 20;
         this.health = 20;
-        this.previousYVelocity = 0; 
-        
+        this.previousYVelocity = 0;
+
         this.lastWPressTime = 0;
         this.isSprinting = false;
 
         this.raycaster = new THREE.Raycaster();
+        this.moveForward = false;
+        this.moveBackward = false;
+        this.moveLeft = false;
+        this.moveRight = false;
+
         this.setupInputs();
-        this.initHealthUI();
     }
 
-    initHealthUI() {
-        this.healthBar = document.getElementById('healthBar');
-        this.updateHealthUI();
-    }
-
-    updateHealthUI() {
-        this.healthBar.innerHTML = '';
-        const heartsToDraw = 10;
-        const currentHearts = Math.ceil(this.health / 2);
-
-        if (this.health <= 4) this.healthBar.classList.add('low-health');
-        else this.healthBar.classList.remove('low-health');
-
-        for (let i = 0; i < heartsToDraw; i++) {
-            const heartDiv = document.createElement('div');
-            heartDiv.className = 'heart';
-            if (i >= currentHearts) heartDiv.classList.add('empty');
-            this.healthBar.appendChild(heartDiv);
-        }
-    }
-
-    takeDamage(amount) {
+    takeDamage(amount: number) {
         this.health -= amount;
         if (this.health < 0) this.health = 0;
-        this.updateHealthUI();
-        
+        if (this.onHealthChange) this.onHealthChange(this.health);
+
         const flash = document.createElement('div');
-        flash.style.position = 'absolute'; flash.style.top = '0'; flash.style.left = '0'; 
+        flash.style.position = 'absolute'; flash.style.top = '0'; flash.style.left = '0';
         flash.style.width = '100%'; flash.style.height = '100%';
         flash.style.backgroundColor = 'rgba(255, 0, 0, 0.4)';
         flash.style.pointerEvents = 'none'; flash.style.zIndex = '999';
         document.body.appendChild(flash);
-        setTimeout(() => document.body.removeChild(flash), 200);
+        setTimeout(() => {
+            if (flash.parentNode) flash.parentNode.removeChild(flash);
+        }, 200);
     }
 
     setupInputs() {
-        this.moveForward = false; this.moveBackward = false;
-        this.moveLeft = false; this.moveRight = false;
-
-        document.addEventListener('keydown', (event) => {
+        window.addEventListener('keydown', (event) => {
             switch (event.code) {
-                case 'KeyW': 
-                    this.moveForward = true; 
+                case 'KeyW':
+                    this.moveForward = true;
                     const currentTime = Date.now();
                     if (currentTime - this.lastWPressTime < 300) this.isSprinting = true;
                     this.lastWPressTime = currentTime;
@@ -82,14 +91,17 @@ export class Player {
                 case 'KeyA': this.moveLeft = true; break;
                 case 'KeyS': this.moveBackward = true; break;
                 case 'KeyD': this.moveRight = true; break;
-                case 'KeyR': this.isSprinting = true; break; 
-                case 'Space': 
-                    if (this.canJump) { this.velocity.y = this.jumpForce; this.canJump = false; }
+                case 'KeyR': this.isSprinting = true; break;
+                case 'Space':
+                    if (this.canJump) {
+                        this.velocity.y = this.jumpForce;
+                        this.canJump = false;
+                    }
                     break;
             }
         });
 
-        document.addEventListener('keyup', (event) => {
+        window.addEventListener('keyup', (event) => {
             switch (event.code) {
                 case 'KeyW': this.moveForward = false; this.isSprinting = false; break;
                 case 'KeyA': this.moveLeft = false; break;
@@ -100,14 +112,14 @@ export class Player {
         });
     }
 
-    update(delta) {
+    update(delta: number) {
         this.currentSpeed = (this.isSprinting && this.moveForward) ? this.sprintSpeed : this.baseSpeed;
         this.velocity.x -= this.velocity.x * 10.0 * delta;
         this.velocity.z -= this.velocity.z * 10.0 * delta;
 
         this.direction.z = Number(this.moveForward) - Number(this.moveBackward);
         this.direction.x = Number(this.moveRight) - Number(this.moveLeft);
-        this.direction.normalize(); 
+        this.direction.normalize();
 
         if (this.moveForward || this.moveBackward) this.velocity.z -= this.direction.z * this.currentSpeed * delta;
         if (this.moveLeft || this.moveRight) this.velocity.x -= this.direction.x * this.currentSpeed * delta;
@@ -118,7 +130,7 @@ export class Player {
         this.previousYVelocity = this.velocity.y;
         this.velocity.y -= this.gravity * delta;
         let nextY = this.camera.position.y + (this.velocity.y * delta);
-        
+
         this.raycaster.set(this.camera.position, new THREE.Vector3(0, -1, 0));
         const floorIntersects = this.raycaster.intersectObjects(this.world.blocks);
 
@@ -133,7 +145,7 @@ export class Player {
                 nextY = floorIntersects[0].point.y + this.playerHeight;
                 this.canJump = true;
             } else if (distToFloor > this.playerHeight) {
-                this.canJump = false; 
+                this.canJump = false;
             }
         } else {
             this.canJump = false;

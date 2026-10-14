@@ -4,10 +4,96 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dreamcraft</title>
-    <meta name="description" content="A Minecraft-inspired 3D voxel sandbox game built with React and Three.js featuring procedural terrain, building, crafting, and survival gameplay.">
+    <link rel="stylesheet" href="CSS/style.css">
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <canvas id="gameCanvas"></canvas>
+    <div id="crosshair" style="display: none;">+</div>
+
+    <div id="uiContainer">
+        <div id="mainMenu">
+            <div class="title-container">
+                <h1 class="bedrock-title">Dreamcraft</h1>
+                <div class="splash-text">Now with Trees!</div>
+            </div>
+            <div class="bedrock-button-stack">
+                <button id="playMenuButton" class="mc-button">Play</button>
+                <button id="settingsButton" class="mc-button">Settings</button>
+                <button id="marketplaceButton" class="mc-button">Marketplace</button>
+            </div>
+        </div>
+
+        <div id="worldScreen" style="display: none;">
+            <div class="java-world-box">
+                <h1 class="java-title">Select World</h1>
+                <div class="world-list">
+                    <div class="world-item">
+                        <strong>New World</strong><br>
+                        <span style="color: #aaa; font-size: 16px;">Survival Mode, Version 1.0</span>
+                    </div>
+                </div>
+                <div class="java-button-row">
+                    <button id="createWorldButton" class="mc-button">Play Selected World</button>
+                    <button id="backButton" class="mc-button">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="inventoryUI" style="display: none;">
+            <div class="inventory-window">
+                <div class="inv-top-row">
+                    <div class="player-preview-box">
+                        <span>Player Preview</span>
+                    </div>
+                    
+                    <div class="crafting-section">
+                        <h3>Crafting</h3>
+                        <div class="crafting-container">
+                            <div class="crafting-grid">
+                                <div class="inv-slot" data-craft-slot="1"></div>
+                                <div class="inv-slot" data-craft-slot="2"></div>
+                                <div class="inv-slot" data-craft-slot="3"></div>
+                                <div class="inv-slot" data-craft-slot="4"></div>
+                            </div>
+                            <div class="crafting-arrow">➔</div>
+                            <div class="inv-slot result-slot"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <h2>Inventory</h2>
+                <div class="inventory-grid">
+                    <script>
+                        for(let i=0; i<27; i++) document.write('<div class="inv-slot"></div>');
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="hud" style="display: none;">
+        <div id="healthBar"></div>
+        <div id="hotbar">
+            <div class="inv-slot active" data-slot="1"></div>
+            <div class="inv-slot" data-slot="2"></div>
+            <div class="inv-slot" data-slot="3"></div>
+            <div class="inv-slot" data-slot="4"></div>
+            <div class="inv-slot" data-slot="5"></div>
+            <div class="inv-slot" data-slot="6"></div>
+            <div class="inv-slot" data-slot="7"></div>
+            <div class="inv-slot" data-slot="8"></div>
+            <div class="inv-slot" data-slot="9"></div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
 </body>
 </html>
